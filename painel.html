@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PixelCodeStudio · Painel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ============================================================
+   DESIGN TOKENS — PixelCodeStudio
+   Paleta: near-black indigo base, acento indigo-elétrico + teal
+   Tipografia: Space Grotesk (display) / Inter (corpo) / JetBrains Mono (dados)
+   ============================================================ */
+:root{
+  --bg:#0A0B12; --surface:#12131D; --surface-2:#181A27; --surface-3:#1F2233;
+  --border:#262A3D; --border-soft:#1B1D2C;
+  --text:#EDEEF5; --text-dim:#9497AC; --text-faint:#5D6079;
+  --primary:#6C63FF; --primary-dim:#4B44B8; --primary-glow:rgba(108,99,255,.35);
+  --teal:#1FD1A6; --amber:#F5A623; --red:#FF5D6C; --blue:#4F8EFF;
+  --grid-line: rgba(108,99,255,.06);
+  --radius:14px; --radius-sm:9px;
+  --shadow: 0 10px 30px -12px rgba(0,0,0,.55);
+  --font-display:'Space Grotesk',sans-serif; --font-body:'Inter',sans-serif; --font-mono:'JetBrains Mono',monospace;
+}
+[data-theme="light"]{
+  --bg:#F3F4F9; --surface:#FFFFFF; --surface-2:#F7F7FC; --surface-3:#EDEEF7;
+  --border:#E2E3EF; --border-soft:#ECEDF6;
+  --text:#181A2A; --text-dim:#63647A; --text-faint:#9A9BB0;
+  --primary:#5B4FE0; --primary-dim:#EDEBFF; --primary-glow:rgba(91,79,224,.18);
+  --teal:#0FA983; --amber:#B9770E; --red:#D8394A; --blue:#2F6FE0;
+  --grid-line: rgba(91,79,224,.05);
+  --shadow: 0 10px 30px -14px rgba(30,30,60,.18);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg); color:var(--text); font-family:var(--font-body);
+  font-size:14px; -webkit-font-smoothing:antialiased;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:34px 34px; background-attachment:fixed;
+}
+h1,h2,h3,h4{font-family:var(--font-display); margin:0; letter-spacing:-.01em;}
+p{margin:0;}
+button{font-family:var(--font-body); cursor:pointer;}
+input,select,textarea{font-family:var(--font-body); color:var(--text); }
+a{color:inherit;}
+::selection{background:var(--primary-glow);}
+.mono{font-family:var(--font-mono);}
+.scrollbar::-webkit-scrollbar{width:8px;height:8px;}
+.scrollbar::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
+.scrollbar::-webkit-scrollbar-track{background:transparent;}
+
+/* ---------- Login ---------- */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden;}
+.login-glow{position:absolute;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,var(--primary-glow),transparent 70%);top:-160px;left:50%;transform:translateX(-50%);pointer-events:none;}
+.login-card{position:relative;width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:36px 32px;box-shadow:var(--shadow);}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+.login-title{font-size:20px;font-weight:700;}
+.login-sub{color:var(--text-dim);font-size:13px;margin-top:4px;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:6px;font-weight:600;}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 12px;font-size:14px;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow);}
+.field textarea{resize:vertical;min-height:70px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:var(--radius-sm);
+  padding:10px 16px;font-size:13.5px;font-weight:600;transition:transform .1s, filter .15s, background .15s;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{filter:brightness(1.08);}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;}
+.btn-ghost{background:transparent;color:var(--text-dim);border:1px solid var(--border);}
+.btn-ghost:hover{color:var(--text);border-color:var(--text-faint);}
+.btn-danger{background:transparent;color:var(--red);border:1px solid rgba(255,93,108,.35);}
+.btn-danger:hover{background:rgba(255,93,108,.1);}
+.btn-block{width:100%;}
+.btn-sm{padding:7px 11px;font-size:12.5px;}
+.login-error{background:rgba(255,93,108,.1);border:1px solid rgba(255,93,108,.3);color:var(--red);
+  padding:9px 12px;border-radius:var(--radius-sm);font-size:12.5px;margin-bottom:16px;}
+.login-demo{margin-top:18px;font-size:11.5px;color:var(--text-faint);text-align:center;line-height:1.6;}
+
+/* ---------- App Shell ---------- */
+.app{display:flex;min-height:100vh;}
+.sidebar{width:236px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:40;transition:transform .25s;}
+.sidebar-head{padding:22px 20px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border-soft);}
+.logo-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--blue));
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:5px;flex-shrink:0;}
+.logo-mark i{background:rgba(255,255,255,.9);border-radius:1px;}
+.logo-mark i:nth-child(2),.logo-mark i:nth-child(4),.logo-mark i:nth-child(6),.logo-mark i:nth-child(8){background:rgba(255,255,255,.45);}
+.logo-mark i:nth-child(5){background:#fff;}
+.brand-name{font-family:var(--font-display);font-weight:700;font-size:14.5px;line-height:1.1;}
+.brand-sub{font-size:10px;color:var(--text-faint);letter-spacing:.06em;text-transform:uppercase;margin-top:2px;}
+.nav{flex:1;overflow-y:auto;padding:14px 12px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:var(--radius-sm);color:var(--text-dim);
+  font-size:13.5px;font-weight:500;cursor:pointer;margin-bottom:2px;transition:background .12s,color .12s;position:relative;}
+.nav-item svg{width:17px;height:17px;flex-shrink:0;}
+.nav-item:hover{background:var(--surface-2);color:var(--text);}
+.nav-item.active{background:var(--primary-glow);color:var(--primary);}
+[data-theme="light"] .nav-item.active{color:var(--primary);}
+.nav-item.active svg{stroke:var(--primary);}
+.nav-group-label{font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.07em;
+  padding:14px 12px 6px;font-weight:600;}
+.sidebar-foot{padding:14px;border-top:1px solid var(--border-soft);}
+.pulse-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-faint);padding:0 4px;}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(31,209,166,.6);animation:pulse 2s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(31,209,166,.5);}70%{box-shadow:0 0 0 6px rgba(31,209,166,0);}100%{box-shadow:0 0 0 0 rgba(31,209,166,0);}}
+
+.main{margin-left:236px;flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{height:62px;flex-shrink:0;border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;padding:0 24px;position:sticky;top:0;background:rgba(10,11,18,.7);backdrop-filter:blur(10px);z-index:30;}
+[data-theme="light"] .topbar{background:rgba(243,244,249,.75);}
+.topbar-title{font-family:var(--font-display);font-weight:700;font-size:17px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.icon-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;color:var(--text-dim);}
+.icon-btn:hover{color:var(--text);border-color:var(--text-faint);}
+.icon-btn svg{width:16px;height:16px;}
+.menu-btn{display:none;}
+.avatar{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--primary),var(--blue));
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;font-family:var(--font-display);}
+.content{padding:24px;flex:1;}
+.sidebar-backdrop{display:none;}
+
+/* ---------- Cards / Grid ---------- */
+.grid{display:grid;gap:16px;}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+.stat-card{position:relative;overflow:hidden;}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.stat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.stat-icon svg{width:16px;height:16px;}
+.stat-label{font-size:12px;color:var(--text-dim);font-weight:500;}
+.stat-value{font-family:var(--font-mono);font-size:23px;font-weight:600;margin-top:2px;letter-spacing:-.01em;}
+.card-title{font-size:14.5px;font-weight:700;margin-bottom:2px;}
+.card-sub{font-size:11.5px;color:var(--text-faint);margin-bottom:14px;}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.section-title{font-size:19px;font-weight:700;}
+.section-sub{font-size:12.5px;color:var(--text-dim);margin-top:3px;}
+
+/* ---------- Badge ---------- */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:600;
+  white-space:nowrap;}
+.dot{width:6px;height:6px;border-radius:50%;}
+
+/* ---------- Table ---------- */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px;}
+thead th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-faint);
+  font-weight:600;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface-2);white-space:nowrap;}
+tbody td{padding:12px 16px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr{transition:background .1s;}
+tbody tr.clickable{cursor:pointer;}
+tbody tr.clickable:hover{background:var(--surface-2);}
+.row-actions{display:flex;gap:6px;justify-content:flex-end;}
+.icon-mini{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:transparent;
+  display:flex;align-items:center;justify-content:center;color:var(--text-dim);}
+.icon-mini:hover{color:var(--text);background:var(--surface-2);}
+.icon-mini svg{width:13px;height:13px;}
+.cell-primary{font-weight:600;color:var(--text);}
+.cell-dim{color:var(--text-dim);}
+
+/* ---------- Toolbar / Filters ---------- */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+.toolbar select,.toolbar input[type=text]{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:8px 11px;font-size:12.5px;color:var(--text);}
+.search-box{position:relative;}
+.search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-faint);}
+.search-box input{padding-left:30px !important;min-width:190px;}
+
+/* ---------- Empty / Loading ---------- */
+.empty-state{padding:56px 20px;text-align:center;color:var(--text-dim);}
+.empty-state svg{width:34px;height:34px;color:var(--text-faint);margin-bottom:10px;}
+.empty-state h4{font-size:14px;margin-bottom:4px;color:var(--text);}
+.empty-state p{font-size:12.5px;}
+.loading-state{padding:50px;text-align:center;color:var(--text-faint);font-size:12.5px;}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;
+  animation:spin .7s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 37%,var(--surface-2) 63%);
+  background-size:400% 100%;animation:sk 1.4s ease infinite;border-radius:6px;}
+@keyframes sk{0%{background-position:100% 50%;}100%{background-position:0 50%;}}
+
+/* ---------- Modal ---------- */
+.modal-backdrop{position:fixed;inset:0;background:rgba(5,6,10,.6);backdrop-filter:blur(2px);display:flex;
+  align-items:flex-start;justify-content:center;padding:40px 16px;z-index:100;overflow-y:auto;animation:fadein .15s;}
+@keyframes fadein{from{opacity:0;}to{opacity:1;}}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:560px;
+  box-shadow:var(--shadow);animation:slideup .18s ease;}
+@keyframes slideup{from{transform:translateY(10px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border-soft);}
+.modal-head h3{font-size:16px;}
+.modal-body{padding:20px 22px;max-height:70vh;overflow-y:auto;}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:16px 22px;border-top:1px solid var(--border-soft);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 12px;}
+.form-grid .span-2{grid-column:1 / -1;}
+.confirm-modal{max-width:380px;}
+.confirm-icon{width:40px;height:40px;border-radius:10px;background:rgba(255,93,108,.12);color:var(--red);
+  display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.confirm-icon svg{width:19px;height:19px;}
+
+/* ---------- Toasts ---------- */
+.toast-stack{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:200;max-width:320px;}
+.toast{background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;
+  font-size:12.5px;display:flex;align-items:center;gap:9px;box-shadow:var(--shadow);animation:toastin .18s ease;}
+@keyframes toastin{from{transform:translateX(16px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* ---------- Kanban ---------- */
+.kanban{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;}
+.kanban-col{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);min-width:250px;
+  flex:0 0 250px;display:flex;flex-direction:column;max-height:calc(100vh - 220px);}
+.kanban-col-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.kanban-col-title{font-size:12.5px;font-weight:700;}
+.kanban-count{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);background:var(--surface-3);
+  padding:1px 7px;border-radius:100px;}
+.kanban-list{padding:10px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px;}
+.kanban-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 12px;
+  cursor:grab;transition:border-color .12s,transform .08s;}
+.kanban-card:hover{border-color:var(--primary);}
+.kanban-card.dragging{opacity:.4;}
+.kanban-card h5{font-size:12.5px;font-weight:700;margin-bottom:4px;}
+.kanban-card .kc-meta{font-size:11px;color:var(--text-dim);margin-top:5px;display:flex;align-items:center;justify-content:space-between;}
+.kanban-col.drag-over{outline:2px dashed var(--primary);outline-offset:-2px;}
+
+/* ---------- Charts ---------- */
+.chart-box{position:relative;height:230px;}
+.chart-box-sm{height:180px;}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:18px;}
+.tab{padding:9px 14px;font-size:13px;font-weight:600;color:var(--text-dim);border-bottom:2px solid transparent;cursor:pointer;}
+.tab.active{color:var(--primary);border-color:var(--primary);}
+
+/* ---------- Client detail ---------- */
+.detail-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:14px;}
+.back-link{display:inline-flex;align-items:center;gap:6px;color:var(--text-dim);font-size:12.5px;font-weight:600;margin-bottom:14px;cursor:pointer;}
+.back-link:hover{color:var(--text);}
+.back-link svg{width:14px;height:14px;}
+.info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 20px;font-size:13px;}
+.info-grid .lbl{color:var(--text-faint);font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px;}
+
+/* ---------- Toggle switch ---------- */
+.switch{position:relative;width:40px;height:22px;background:var(--surface-3);border:1px solid var(--border);border-radius:100px;
+  cursor:pointer;flex-shrink:0;}
+.switch.on{background:var(--primary);}
+.switch .knob{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .15s;}
+.switch.on .knob{left:20px;}
+
+/* ---------- Demo banner ---------- */
+.demo-banner{background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);color:var(--amber);
+  padding:9px 14px;border-radius:var(--radius-sm);font-size:12px;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.demo-banner svg{width:14px;height:14px;flex-shrink:0;}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 980px){
+  .grid-4{grid-template-columns:repeat(2,1fr);}
+  .form-grid{grid-template-columns:1fr;}
+}
+@media (max-width: 860px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .menu-btn{display:flex;}
+  .sidebar-backdrop.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:39;}
+}
+@media (max-width: 620px){
+  .grid-4,.grid-2{grid-template-columns:1fr;}
+  .content{padding:16px;}
+  .topbar{padding:0 16px;}
+  .kanban{flex-direction:column;}
+  .kanban-col{max-height:none;min-width:0;flex-basis:auto;}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+  // =========================================================
+  // CONFIGURAÇÃO DO SUPABASE
+  // Troque pelos dados do SEU projeto (Settings > API no Supabase)
+  // =========================================================
+  window.__SUPABASE_URL__ = "https://muhhekchaqcoclqcukoo.supabase.co";
+  window.__SUPABASE_ANON_KEY__ = "sb_publishable_vuqdnQ9MQ27e5C_FkgnaBg_7ufCqg2i";
+</script>
+
+<script type="text/babel" data-presets="react,env">
+const { useState, useEffect, useMemo, useRef, useCallback, createContext, useContext } = React;
+
+const supabase = window.supabase.createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON_KEY__);
+const CONFIGURED = !window.__SUPABASE_URL__.includes("SEU-PROJETO");
+
+/* ============================================================
+   SETUP — SQL do banco e instruções embutidos no próprio arquivo,
+   para que este HTML seja o único arquivo necessário.
+   ============================================================ */
+const SQL_SCHEMA = `-- =========================================================
+-- PixelCodeStudio · Painel Administrativo
+-- Schema Supabase (PostgreSQL)
+-- =========================================================
+-- Como usar:
+-- 1. Crie um projeto em https://supabase.com
+-- 2. Abra o "SQL Editor" do projeto
+-- 3. Cole este arquivo inteiro e clique em "Run"
+-- 4. Em Authentication > Users, crie o usuário administrador
+--    (email + senha) que vai logar no painel
+-- 5. (Opcional) Rode a seção "DADOS DE DEMONSTRAÇÃO" no final
+-- =========================================================
+
+create extension if not exists "pgcrypto";
+
+-- ---------------------------------------------------------
+-- TABELAS
+-- ---------------------------------------------------------
+
+create table if not exists public.clients (
+  id uuid primary key default gen_random_uuid(),
+  nome text not null,
+  empresa text,
+  whatsapp text,
+  email text,
+  cidade text,
+  site text,
+  instagram text,
+  status text not null default 'lead'
+    check (status in ('lead','ativo','inativo','finalizado')),
+  valor_total_contratado numeric(12,2) not null default 0,
+  observacoes text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.projects (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid references public.clients(id) on delete set null,
+  nome text not null,
+  descricao text,
+  valor numeric(12,2) not null default 0,
+  data_inicio date,
+  prazo date,
+  status text not null default 'planejamento'
+    check (status in ('planejamento','em_desenvolvimento','aguardando_aprovacao','em_manutencao','concluido','cancelado')),
+  link_site text,
+  link_github text,
+  tecnologias text,
+  observacoes text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.leads (
+  id uuid primary key default gen_random_uuid(),
+  empresa text not null,
+  segmento text,
+  responsavel text,
+  whatsapp text,
+  instagram text,
+  site_atual text,
+  cidade text,
+  data_primeiro_contato date,
+  ultimo_contato date,
+  observacoes text,
+  potencial text not null default 'medio'
+    check (potencial in ('baixo','medio','alto')),
+  valor_estimado numeric(12,2) not null default 0,
+  etapa text not null default 'nao_contatado'
+    check (etapa in ('nao_contatado','contatado','respondeu','interessado','negociacao','fechado','recusou')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.quotes (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid references public.clients(id) on delete set null,
+  servico text,
+  descricao text,
+  valor numeric(12,2) not null default 0,
+  data date,
+  validade date,
+  status text not null default 'rascunho'
+    check (status in ('rascunho','enviado','visualizado','aceito','recusado','expirado')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.payments (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid references public.clients(id) on delete set null,
+  project_id uuid references public.projects(id) on delete set null,
+  descricao text,
+  valor numeric(12,2) not null default 0,
+  data date not null default current_date,
+  metodo text,
+  status text not null default 'pendente'
+    check (status in ('pago','pendente')),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.expenses (
+  id uuid primary key default gen_random_uuid(),
+  descricao text not null,
+  categoria text,
+  valor numeric(12,2) not null default 0,
+  data date not null default current_date,
+  observacao text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.updates (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid references public.clients(id) on delete set null,
+  project_id uuid references public.projects(id) on delete set null,
+  descricao text not null,
+  data_solicitacao date not null default current_date,
+  valor numeric(12,2) not null default 0,
+  status text not null default 'solicitada'
+    check (status in ('solicitada','em_andamento','concluida','aguardando_pagamento')),
+  data_conclusao date,
+  observacoes text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.services (
+  id uuid primary key default gen_random_uuid(),
+  nome text not null,
+  descricao text,
+  preco_inicial numeric(12,2) not null default 0,
+  prazo_estimado text,
+  observacoes text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.portfolio (
+  id uuid primary key default gen_random_uuid(),
+  nome text not null,
+  client_id uuid references public.clients(id) on delete set null,
+  imagem_url text,
+  link text,
+  tecnologias text,
+  descricao text,
+  data date,
+  destaque boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.activities (
+  id uuid primary key default gen_random_uuid(),
+  descricao text not null,
+  tipo text,
+  created_at timestamptz not null default now()
+);
+
+-- Índices em chaves estrangeiras / colunas usadas em filtros
+create index if not exists idx_projects_client on public.projects(client_id);
+create index if not exists idx_projects_status on public.projects(status);
+create index if not exists idx_payments_client on public.payments(client_id);
+create index if not exists idx_payments_project on public.payments(project_id);
+create index if not exists idx_payments_status on public.payments(status);
+create index if not exists idx_updates_client on public.updates(client_id);
+create index if not exists idx_updates_project on public.updates(project_id);
+create index if not exists idx_quotes_client on public.quotes(client_id);
+create index if not exists idx_leads_etapa on public.leads(etapa);
+create index if not exists idx_portfolio_client on public.portfolio(client_id);
+create index if not exists idx_activities_created on public.activities(created_at desc);
+
+-- ---------------------------------------------------------
+-- ROW LEVEL SECURITY
+-- Painel privado: só usuários autenticados (o admin) acessam.
+-- Não existe cadastro público — o usuário é criado manualmente
+-- no painel Authentication do Supabase.
+-- ---------------------------------------------------------
+
+do $$
+declare
+  t text;
+begin
+  for t in select unnest(array[
+    'clients','projects','leads','quotes','payments',
+    'expenses','updates','services','portfolio','activities'
+  ])
+  loop
+    execute format('alter table public.%I enable row level security;', t);
+
+    execute format('drop policy if exists "auth_select_%1$s" on public.%1$I;', t);
+    execute format('drop policy if exists "auth_insert_%1$s" on public.%1$I;', t);
+    execute format('drop policy if exists "auth_update_%1$s" on public.%1$I;', t);
+    execute format('drop policy if exists "auth_delete_%1$s" on public.%1$I;', t);
+
+    execute format('create policy "auth_select_%1$s" on public.%1$I for select to authenticated using (true);', t);
+    execute format('create policy "auth_insert_%1$s" on public.%1$I for insert to authenticated with check (true);', t);
+    execute format('create policy "auth_update_%1$s" on public.%1$I for update to authenticated using (true) with check (true);', t);
+    execute format('create policy "auth_delete_%1$s" on public.%1$I for delete to authenticated using (true);', t);
+  end loop;
+end $$;
+
+-- ---------------------------------------------------------
+-- LOG AUTOMÁTICO DE ATIVIDADES
+-- Toda vez que um registro importante é criado (ou um projeto/
+-- atualização muda de status), uma linha aparece em "activities"
+-- e, consequentemente, no card "Atividades recentes" do dashboard.
+-- ---------------------------------------------------------
+
+create or replace function public.fn_log_activity() returns trigger
+language plpgsql security definer as $$
+declare
+  rec jsonb;
+  old_rec jsonb;
+  msg text;
+begin
+  -- Usamos jsonb em vez de acessar NEW.<campo> diretamente porque este
+  -- gatilho é reaproveitado em várias tabelas com colunas diferentes;
+  -- acessar um campo que não existe em determinada tabela quebraria a
+  -- função. Com jsonb, um campo ausente simplesmente retorna null.
+  if TG_OP = 'INSERT' then
+    rec := to_jsonb(NEW);
+    msg := case TG_TABLE_NAME
+      when 'clients'  then 'Novo cliente cadastrado: ' || coalesce(rec->>'nome','')
+      when 'projects' then 'Novo projeto cadastrado: ' || coalesce(rec->>'nome','')
+      when 'leads'    then 'Novo lead cadastrado: ' || coalesce(rec->>'empresa','')
+      when 'quotes'   then 'Novo orçamento criado'
+      when 'payments' then 'Pagamento registrado' || case when rec->>'descricao' is not null then ' — ' || (rec->>'descricao') else '' end
+      when 'updates'  then 'Nova atualização adicionada: ' || coalesce(rec->>'descricao','')
+      else TG_TABLE_NAME || ' — novo registro'
+    end;
+    insert into public.activities(descricao, tipo) values (msg, TG_TABLE_NAME);
+    return NEW;
+  end if;
+
+  if TG_OP = 'UPDATE' then
+    rec := to_jsonb(NEW);
+    old_rec := to_jsonb(OLD);
+    if TG_TABLE_NAME = 'projects' and rec->>'status' is distinct from old_rec->>'status' then
+      insert into public.activities(descricao, tipo) values (
+        'Projeto ' || coalesce(rec->>'nome','') || ' atualizado para "' || (rec->>'status') || '"', 'projects'
+      );
+    elsif TG_TABLE_NAME = 'updates' and rec->>'status' is distinct from old_rec->>'status' then
+      insert into public.activities(descricao, tipo) values (
+        'Atualização "' || coalesce(rec->>'descricao','') || '" mudou para "' || (rec->>'status') || '"', 'updates'
+      );
+    elsif TG_TABLE_NAME = 'payments' and rec->>'status' is distinct from old_rec->>'status' and rec->>'status' = 'pago' then
+      insert into public.activities(descricao, tipo) values (
+        'Pagamento recebido' || case when rec->>'descricao' is not null then ' — ' || (rec->>'descricao') else '' end, 'payments'
+      );
+    elsif TG_TABLE_NAME = 'leads' and rec->>'etapa' is distinct from old_rec->>'etapa' then
+      insert into public.activities(descricao, tipo) values (
+        'Lead ' || coalesce(rec->>'empresa','') || ' movido para "' || (rec->>'etapa') || '"', 'leads'
+      );
+    end if;
+    return NEW;
+  end if;
+
+  return NEW;
+end;
+$$;
+
+do $$
+declare
+  t text;
+begin
+  for t in select unnest(array['clients','projects','leads','quotes','payments','updates'])
+  loop
+    execute format('drop trigger if exists trg_log_insert_%1$s on public.%1$I;', t);
+    execute format('create trigger trg_log_insert_%1$s after insert on public.%1$I for each row execute function public.fn_log_activity();', t);
+  end loop;
+
+  for t in select unnest(array['projects','updates','payments','leads'])
+  loop
+    execute format('drop trigger if exists trg_log_update_%1$s on public.%1$I;', t);
+    execute format('create trigger trg_log_update_%1$s after update on public.%1$I for each row execute function public.fn_log_activity();', t);
+  end loop;
+end $$;
+
+-- ---------------------------------------------------------
+-- DADOS DE DEMONSTRAÇÃO (opcional)
+-- Rode este bloco só se quiser ver o painel com dados de
+-- exemplo. Todos os textos deixam claro que são fictícios.
+-- Para começar do zero, simplesmente não rode esta parte.
+-- ---------------------------------------------------------
+
+insert into public.clients (nome, empresa, whatsapp, email, cidade, site, instagram, status, valor_total_contratado, observacoes)
+values
+('Ana Ferreira', 'Toque Final Limpeza', '5562999990001', 'ana@toquefinal.com.br', 'Goiânia', 'toquefinal.com.br', '@toquefinal', 'ativo', 4200, '[Demo] Cliente recorrente, contrato de manutenção mensal.'),
+('Marcos Lima', 'Studio Fit Academia', '5562999990002', 'marcos@studiofit.com.br', 'Goiânia', 'studiofit.com.br', '@studiofit', 'finalizado', 3200, '[Demo] Projeto entregue, sem manutenção ativa.'),
+('Renata Souza', 'Doce Ponto Confeitaria', '5562999990003', 'renata@doceponto.com', 'Aparecida de Goiânia', null, '@doceponto', 'lead', 0, '[Demo] Em negociação de orçamento.')
+returning id;
+
+insert into public.projects (client_id, nome, descricao, valor, data_inicio, prazo, status, link_site, link_github, tecnologias, observacoes)
+select id, 'Painel ' || empresa, '[Demo] Sistema administrativo web.', valor_total_contratado, current_date - 30, current_date + 15,
+  case status when 'ativo' then 'em_desenvolvimento' when 'finalizado' then 'concluido' else 'planejamento' end,
+  site, null, 'React, Supabase', '[Demo] Projeto de exemplo.'
+from public.clients where empresa in ('Toque Final Limpeza','Studio Fit Academia','Doce Ponto Confeitaria');
+
+insert into public.payments (client_id, project_id, descricao, valor, data, metodo, status)
+select c.id, p.id, '[Demo] Entrada do projeto', p.valor * 0.5, current_date - 20, 'PIX', 'pago'
+from public.clients c join public.projects p on p.client_id = c.id;
+
+insert into public.payments (client_id, project_id, descricao, valor, data, metodo, status)
+select c.id, p.id, '[Demo] Parcela final', p.valor * 0.5, current_date + 10, 'PIX', 'pendente'
+from public.clients c join public.projects p on p.client_id = c.id where c.empresa = 'Toque Final Limpeza';
+
+insert into public.expenses (descricao, categoria, valor, data, observacao) values
+('[Demo] Hospedagem mensal', 'Infraestrutura', 45.90, current_date - 5, 'Servidor de projetos'),
+('[Demo] Assinatura de design', 'Ferramentas', 89.00, current_date - 12, 'Licença mensal');
+
+insert into public.updates (client_id, project_id, descricao, data_solicitacao, valor, status)
+select c.id, p.id, '[Demo] Trocar banner da página inicial', current_date - 3, 80, 'aguardando_pagamento'
+from public.clients c join public.projects p on p.client_id = c.id where c.empresa = 'Toque Final Limpeza';
+
+insert into public.leads (empresa, segmento, responsavel, whatsapp, cidade, data_primeiro_contato, ultimo_contato, potencial, valor_estimado, etapa, observacoes) values
+('[Demo] Auto Peças Center', 'Automotivo', 'João Pedro', '5562999990010', 'Goiânia', current_date - 10, current_date - 2, 'alto', 2800, 'negociacao', '[Demo] Aguardando resposta sobre orçamento.'),
+('[Demo] Clínica OdontoVida', 'Saúde', 'Fernanda Alves', '5562999990011', 'Goiânia', current_date - 20, current_date - 15, 'medio', 1900, 'interessado', '[Demo] Pediu referências de outros clientes.'),
+('[Demo] Padaria Pão Quente', 'Alimentação', 'Carlos Souza', '5562999990012', 'Aparecida de Goiânia', current_date - 5, current_date - 5, 'baixo', 900, 'contatado', '[Demo] Primeiro contato via Instagram.');
+
+insert into public.quotes (client_id, servico, descricao, valor, data, validade, status)
+select id, 'Site institucional', '[Demo] Orçamento enviado para aprovação.', 2500, current_date - 4, current_date + 10, 'enviado'
+from public.clients where empresa = 'Doce Ponto Confeitaria';
+
+insert into public.services (nome, descricao, preco_inicial, prazo_estimado) values
+('Landing Page', 'Página única focada em conversão.', 900, '5 dias úteis'),
+('Site institucional', 'Site multi-página para apresentar a empresa.', 1800, '10 dias úteis'),
+('Loja virtual', 'E-commerce completo com pagamento online.', 4500, '20 dias úteis'),
+('Sistema web', 'Painel ou sistema sob medida.', 6000, 'A combinar'),
+('Manutenção mensal', 'Suporte e pequenas alterações recorrentes.', 250, 'Mensal'),
+('Atualização pontual', 'Alteração específica em site existente.', 80, '1-3 dias úteis');
+
+insert into public.portfolio (nome, client_id, link, tecnologias, descricao, data, destaque)
+select 'Painel ' || empresa, id, site, 'React, Supabase', '[Demo] Projeto de portfólio.', current_date - 25, (empresa = 'Studio Fit Academia')
+from public.clients where empresa in ('Studio Fit Academia','Toque Final Limpeza');
+`;
+const SETUP_STEPS = [
+  {t:'Crie um projeto no Supabase', d:'Acesse supabase.com, crie uma conta e um novo projeto (o plano gratuito é suficiente). Anote a "Project URL" e a "anon public key" em Settings → API.'},
+  {t:'Rode o script SQL', d:'No painel do Supabase, abra SQL Editor → New query, cole o script da aba "Script SQL" ao lado e clique em Run. Isso cria as tabelas, ativa a segurança (RLS) e insere alguns dados de demonstração marcados com [Demo].'},
+  {t:'Crie seu usuário administrador', d:'Em Authentication → Users → Add user, cadastre seu e-mail e senha. Não existe cadastro público neste painel — só quem for criado aqui consegue entrar.'},
+  {t:'Conecte este arquivo ao seu projeto', d:'Abra este HTML em um editor de texto e troque, perto do topo, as duas linhas window.__SUPABASE_URL__ e window.__SUPABASE_ANON_KEY__ pelos valores do seu projeto. Salve e abra o arquivo novamente no navegador.'},
+  {t:'Pronto', d:'Abra o arquivo no navegador (ou hospede em qualquer serviço de arquivos estáticos) e faça login com o e-mail e senha criados no passo 3.'},
+];
+function SetupModal({onClose}){
+  const [tab, setTab] = useState('instrucoes');
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(SQL_SCHEMA).then(()=>{ setCopied(true); setTimeout(()=>setCopied(false), 2000); });
+  };
+  return (
+    <Modal title="Configurar o painel" onClose={onClose} wide
+      footer={<button className="btn btn-ghost" onClick={onClose}>Fechar</button>}>
+      <div className="tabs" style={{marginBottom:14}}>
+        <div className={"tab "+(tab==='instrucoes'?'active':'')} onClick={()=>setTab('instrucoes')}>Instruções</div>
+        <div className={"tab "+(tab==='sql'?'active':'')} onClick={()=>setTab('sql')}>Script SQL</div>
+      </div>
+      {tab==='instrucoes' ? (
+        <div style={{display:'flex',flexDirection:'column',gap:16}}>
+          {!CONFIGURED && <div className="demo-banner">{I('info')} Este arquivo ainda não está conectado a um projeto Supabase — siga os passos abaixo.</div>}
+          {SETUP_STEPS.map((s,i)=>(
+            <div key={i} style={{display:'flex',gap:12}}>
+              <div className="stat-icon" style={{background:'var(--primary-glow)',color:'var(--primary)',flexShrink:0}}>
+                <span className="mono" style={{fontSize:12,fontWeight:700}}>{i+1}</span>
+              </div>
+              <div>
+                <div style={{fontWeight:700,fontSize:13,marginBottom:2}}>{s.t}</div>
+                <div style={{fontSize:12.5,color:'var(--text-dim)',lineHeight:1.5}}>{s.d}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+            <span style={{fontSize:12,color:'var(--text-dim)'}}>Cole este script inteiro no SQL Editor do Supabase e rode.</span>
+            <button className="btn btn-sm btn-ghost" onClick={copy}>{copied ? 'Copiado!' : 'Copiar script'}</button>
+          </div>
+          <pre className="scrollbar" style={{background:'var(--surface-2)',border:'1px solid var(--border)',borderRadius:'var(--radius-sm)',
+            padding:14,fontSize:11,lineHeight:1.6,maxHeight:400,overflow:'auto',whiteSpace:'pre',fontFamily:'var(--font-mono)'}}>{SQL_SCHEMA}</pre>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+/* ============================================================
+   ICONS — small inline SVG set (stroke-based, consistent weight)
+   ============================================================ */
+const Icon = ({ path, ...p }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...p}>
+    {path}
+  </svg>
+);
+const ICONS = {
+  dashboard: <><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></>,
+  clients: <><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.5 3-6 6.5-6s6.5 2.5 6.5 6"/><path d="M16 4.2a3.2 3.2 0 010 6.2M20.5 20c0-2.8-1.8-5-4.3-5.8"/></>,
+  projects: <><path d="M3 7l3-4h12l3 4"/><path d="M3 7h18v12a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><path d="M9 11h6"/></>,
+  prospect: <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".7" fill="currentColor"/></>,
+  quotes: <><path d="M6 2h9l4 4v16H6z"/><path d="M15 2v4h4"/><path d="M9 13h7M9 17h7M9 9h2"/></>,
+  finance: <><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z"/><path d="M12 7v10M9.5 9.5c0-1.4 1.2-2.2 2.5-2.2 1.6 0 2.7.9 2.7 2 0 1.4-1.3 1.9-2.7 2.3-1.4.4-2.5 1-2.5 2.4 0 1.1 1.1 2 2.5 2s2.5-.7 2.5-2"/></>,
+  updates: <><path d="M21 12a9 9 0 11-3-6.7"/><path d="M21 3v6h-6"/></>,
+  services: <><path d="M14.7 3.3l2 2-9 9-3 1 1-3z"/><path d="M4 21h16"/><path d="M12.5 6.5l4 4"/></>,
+  portfolio: <><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5.5A1.5 1.5 0 019.5 4h5A1.5 1.5 0 0116 5.5V7"/></>,
+  reports: <><path d="M4 20V10M11 20V4M18 20v-7"/></>,
+  settings: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.9 2.9l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V21a2 2 0 11-4 0v-.2a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.9-2.9l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H3a2 2 0 110-4h.2a1.7 1.7 0 001.6-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.9-2.9l.1.1a1.7 1.7 0 001.9.3H9.5a1.7 1.7 0 001-1.6V3a2 2 0 114 0v.2a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.9 2.9l-.1.1a1.7 1.7 0 00-.3 1.9V9.5a1.7 1.7 0 001.6 1H21a2 2 0 110 4h-.2a1.7 1.7 0 00-1.6 1z"/></>,
+  logout: <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></>,
+  sun: <><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8L6 18M18 6l1.8-1.8"/></>,
+  moon: <path d="M20 14.5A8.5 8.5 0 119.5 4a7 7 0 0010.5 10.5z"/>,
+  menu: <><path d="M3 6h18M3 12h18M3 18h18"/></>,
+  x: <path d="M18 6L6 18M6 6l12 12"/>,
+  plus: <path d="M12 5v14M5 12h14"/>,
+  edit: <><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></>,
+  trash: <><path d="M4 7h16"/><path d="M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/><path d="M9 7V4h6v3"/></>,
+  search: <><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></>,
+  chevron: <path d="M9 6l6 6-6 6"/>,
+  back: <path d="M15 6l-6 6 6 6"/>,
+  check: <path d="M20 6L9 17l-5-5"/>,
+  alert: <><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9L1.8 18a1.8 1.8 0 001.5 2.7h17.4a1.8 1.8 0 001.5-2.7L13.7 3.9a1.8 1.8 0 00-3.4 0z"/></>,
+  external: <><path d="M14 4h6v6"/><path d="M20 4L10 14"/><path d="M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1h6"/></>,
+  inbox: <><path d="M3 9l2-6h14l2 6"/><path d="M3 9v9a1 1 0 001 1h16a1 1 0 001-1V9"/><path d="M3 9h5l1.5 3h5L16 9h5"/></>,
+  info: <><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></>,
+};
+const I = (name, props={}) => <Icon path={ICONS[name]} {...props} />;
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const BRL = v => "R$ " + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtDate = d => d ? new Date(d+"T00:00:00").toLocaleDateString('pt-BR') : "—";
+const fmtDateTime = d => d ? new Date(d).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : "—";
+const timeAgo = d => {
+  const s = Math.floor((Date.now() - new Date(d).getTime())/1000);
+  if (s < 60) return "agora"; 
+  if (s < 3600) return Math.floor(s/60)+"min atrás";
+  if (s < 86400) return Math.floor(s/3600)+"h atrás";
+  return Math.floor(s/86400)+"d atrás";
+};
+const monthLabel = (y,m) => new Date(y,m,1).toLocaleDateString('pt-BR',{month:'short'}).replace('.','');
+const uid = () => Math.random().toString(36).slice(2);
+
+/* ============================================================
+   TOAST SYSTEM
+   ============================================================ */
+const ToastCtx = createContext(null);
+function ToastProvider({children}){
+  const [toasts,setToasts] = useState([]);
+  const push = useCallback((msg, type='info')=>{
+    const id = uid();
+    setToasts(t=>[...t,{id,msg,type}]);
+    setTimeout(()=> setToasts(t=>t.filter(x=>x.id!==id)), 3400);
+  },[]);
+  const colors = {success:'var(--teal)', error:'var(--red)', info:'var(--primary)'};
+  return (
+    <ToastCtx.Provider value={push}>
+      {children}
+      <div className="toast-stack">
+        {toasts.map(t=>(
+          <div className="toast" key={t.id}>
+            <span className="toast-dot" style={{background:colors[t.type]||colors.info}}></span>
+            <span>{t.msg}</span>
+          </div>
+        ))}
+      </div>
+    </ToastCtx.Provider>
+  );
+}
+const useToast = () => useContext(ToastCtx);
+
+/* ============================================================
+   MODAL / CONFIRM
+   ============================================================ */
+function Modal({title, onClose, children, footer, wide}){
+  useEffect(()=>{
+    const onKey = e => { if(e.key==='Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return ()=>window.removeEventListener('keydown', onKey);
+  },[onClose]);
+  return (
+    <div className="modal-backdrop" onMouseDown={e=>{ if(e.target===e.currentTarget) onClose(); }}>
+      <div className="modal" style={wide?{maxWidth:720}:{}}>
+        <div className="modal-head">
+          <h3>{title}</h3>
+          <button className="icon-btn" onClick={onClose}>{I('x')}</button>
+        </div>
+        <div className="modal-body scrollbar">{children}</div>
+        {footer && <div className="modal-foot">{footer}</div>}
+      </div>
+    </div>
+  );
+}
+function ConfirmDialog({title, message, onConfirm, onClose, danger=true, busy}){
+  return (
+    <div className="modal-backdrop" onMouseDown={e=>{ if(e.target===e.currentTarget) onClose(); }}>
+      <div className="modal confirm-modal">
+        <div style={{padding:'22px 22px 6px'}}>
+          <div className="confirm-icon">{I('alert')}</div>
+          <h3 style={{marginBottom:8}}>{title}</h3>
+          <p style={{color:'var(--text-dim)', fontSize:13, lineHeight:1.5}}>{message}</p>
+        </div>
+        <div className="modal-foot">
+          <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
+          <button className={danger?"btn btn-danger":"btn btn-primary"} style={danger?{background:'var(--red)',color:'#fff',border:'none'}:{}} disabled={busy} onClick={onConfirm}>
+            {busy ? "Excluindo..." : "Confirmar exclusão"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   BADGES — status colors per domain
+   ============================================================ */
+const STATUS_STYLES = {
+  // clients
+  lead:{c:'var(--blue)', l:'Lead'}, ativo:{c:'var(--teal)', l:'Ativo'}, inativo:{c:'var(--text-faint)', l:'Inativo'}, finalizado:{c:'var(--primary)', l:'Finalizado'},
+  // projects
+  planejamento:{c:'var(--blue)', l:'Planejamento'}, em_desenvolvimento:{c:'var(--amber)', l:'Em desenvolvimento'},
+  aguardando_aprovacao:{c:'var(--primary)', l:'Aguardando aprovação'}, em_manutencao:{c:'#B98CFF', l:'Em manutenção'},
+  concluido:{c:'var(--teal)', l:'Concluído'}, cancelado:{c:'var(--red)', l:'Cancelado'},
+  // payments
+  pago:{c:'var(--teal)', l:'Pago'}, pendente:{c:'var(--amber)', l:'Pendente'},
+  // updates
+  solicitada:{c:'var(--blue)', l:'Solicitada'}, em_andamento:{c:'var(--amber)', l:'Em andamento'},
+  concluida:{c:'var(--teal)', l:'Concluída'}, aguardando_pagamento:{c:'var(--red)', l:'Aguardando pagamento'},
+  // leads pipeline
+  nao_contatado:{c:'var(--text-faint)', l:'Não contatado'}, contatado:{c:'var(--blue)', l:'Contatado'},
+  respondeu:{c:'#B98CFF', l:'Respondeu'}, interessado:{c:'var(--amber)', l:'Interessado'},
+  negociacao:{c:'var(--primary)', l:'Negociação'}, fechado:{c:'var(--teal)', l:'Fechado'}, recusou:{c:'var(--red)', l:'Recusou'},
+  // quotes
+  rascunho:{c:'var(--text-faint)', l:'Rascunho'}, enviado:{c:'var(--blue)', l:'Enviado'}, visualizado:{c:'#B98CFF', l:'Visualizado'},
+  aceito:{c:'var(--teal)', l:'Aceito'}, recusado:{c:'var(--red)', l:'Recusado'}, expirado:{c:'var(--text-faint)', l:'Expirado'},
+  // potencial
+  baixo:{c:'var(--text-faint)', l:'Baixo'}, medio:{c:'var(--amber)', l:'Médio'}, alto:{c:'var(--teal)', l:'Alto'},
+};
+function Badge({status}){
+  const s = STATUS_STYLES[status] || {c:'var(--text-faint)', l:status||'—'};
+  return <span className="badge" style={{background:s.c+'1f', color:s.c}}><span className="dot" style={{background:s.c}}></span>{s.l}</span>;
+}
+
+/* ============================================================
+   GENERIC FORM (driven by field config)
+   ============================================================ */
+function EntityForm({fields, value, onChange, relationOptions}){
+  const set = (k,v) => onChange({...value, [k]:v});
+  return (
+    <div className="form-grid">
+      {fields.map(f=>{
+        const spanClass = f.full ? "span-2" : "";
+        const val = value[f.key] ?? '';
+        if (f.type === 'select'){
+          const opts = f.relation ? (relationOptions[f.relation]||[]) : f.options;
+          return (
+            <div className={"field "+spanClass} key={f.key}>
+              <label>{f.label}{f.required && ' *'}</label>
+              <select value={val} onChange={e=>set(f.key, e.target.value)}>
+                <option value="">{f.placeholder || 'Selecione...'}</option>
+                {opts.map(o => typeof o==='object'
+                  ? <option value={o.id} key={o.id}>{o.label}</option>
+                  : <option value={o} key={o}>{(STATUS_STYLES[o]&&STATUS_STYLES[o].l)||o}</option>
+                )}
+              </select>
+            </div>
+          );
+        }
+        if (f.type === 'textarea'){
+          return (
+            <div className={"field "+spanClass} key={f.key}>
+              <label>{f.label}{f.required && ' *'}</label>
+              <textarea value={val} onChange={e=>set(f.key,e.target.value)} placeholder={f.placeholder}/>
+            </div>
+          );
+        }
+        if (f.type === 'checkbox'){
+          return (
+            <div className={"field "+spanClass} key={f.key} style={{display:'flex',alignItems:'center',gap:10}}>
+              <div className={"switch "+(val?"on":"")} onClick={()=>set(f.key, !val)}><div className="knob"></div></div>
+              <label style={{margin:0}}>{f.label}</label>
+            </div>
+          );
+        }
+        return (
+          <div className={"field "+spanClass} key={f.key}>
+            <label>{f.label}{f.required && ' *'}</label>
+            <input type={f.type||'text'} step={f.type==='number'?'0.01':undefined} value={val}
+              onChange={e=>set(f.key, e.target.value)} placeholder={f.placeholder}/>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ============================================================
+   DATA HOOK — generic fetch/list for a table
+   ============================================================ */
+function useTable(table, selectStr, orderBy, deps=[]){
+  const [rows,setRows] = useState([]);
+  const [loading,setLoading] = useState(true);
+  const [error,setError] = useState(null);
+  const refresh = useCallback(async ()=>{
+    setLoading(true); setError(null);
+    let q = supabase.from(table).select(selectStr||'*');
+    q = q.order(orderBy||'created_at', {ascending:false});
+    const {data, error} = await q;
+    if (error) setError(error.message); else setRows(data||[]);
+    setLoading(false);
+  // eslint-disable-next-line
+  },[table, ...deps]);
+  useEffect(()=>{ refresh(); },[refresh]);
+  return {rows, loading, error, refresh, setRows};
+}
+
+/* ============================================================
+   GENERIC CRUD PAGE
+   ============================================================ */
+function EntityPage({icon, title, subtitle, table, selectStr, fields, columns, emptyIcon, emptyText,
+  filterDefs=[], relationOptions={}, onRowClick, extraToolbar, summaryCards, searchKeys=[]}){
+  const toast = useToast();
+  const {rows, loading, error, refresh} = useTable(table, selectStr);
+  const [filters, setFilters] = useState({});
+  const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const openNew = () => { setEditing(null); setForm({}); setModalOpen(true); };
+  const openEdit = (row) => { setEditing(row); setForm({...row}); setModalOpen(true); };
+
+  const save = async () => {
+    setSaving(true);
+    const payload = {...form};
+    delete payload.id; delete payload.created_at;
+    fields.forEach(f=>{ if(f.type==='number') payload[f.key] = payload[f.key]===''||payload[f.key]==null ? 0 : Number(payload[f.key]); });
+    fields.forEach(f=>{ if((f.type==='date') && payload[f.key]==='') payload[f.key] = null; });
+    // strip joined relation objects
+    Object.keys(payload).forEach(k=>{ if(payload[k] && typeof payload[k]==='object' && !Array.isArray(payload[k])) delete payload[k]; });
+    let res;
+    if (editing) res = await supabase.from(table).update(payload).eq('id', editing.id);
+    else res = await supabase.from(table).insert(payload);
+    setSaving(false);
+    if (res.error){ toast(res.error.message, 'error'); return; }
+    toast(editing ? "Registro atualizado com sucesso." : "Registro criado com sucesso.", 'success');
+    setModalOpen(false); refresh();
+  };
+
+  const doDelete = async () => {
+    setDeleting(true);
+    const {error} = await supabase.from(table).delete().eq('id', confirmDel.id);
+    setDeleting(false);
+    if (error){ toast(error.message,'error'); return; }
+    toast("Registro excluído.", 'success');
+    setConfirmDel(null); refresh();
+  };
+
+  let filtered = rows;
+  filterDefs.forEach(fd=>{
+    const v = filters[fd.key];
+    if (v) filtered = filtered.filter(r => (fd.getValue ? fd.getValue(r) : r[fd.key]) === v);
+  });
+  if (search && searchKeys.length){
+    const s = search.toLowerCase();
+    filtered = filtered.filter(r => searchKeys.some(k => (r[k]||'').toString().toLowerCase().includes(s)));
+  }
+
+  return (
+    <div>
+      <div className="section-head">
+        <div>
+          <div className="section-title">{title}</div>
+          {subtitle && <div className="section-sub">{subtitle}</div>}
+        </div>
+        <button className="btn btn-primary" onClick={openNew}>{I('plus',{width:15,height:15})} Novo</button>
+      </div>
+
+      {summaryCards}
+
+      <div className="toolbar">
+        {searchKeys.length>0 && (
+          <div className="search-box">
+            {I('search')}
+            <input type="text" placeholder="Buscar..." value={search} onChange={e=>setSearch(e.target.value)}/>
+          </div>
+        )}
+        {filterDefs.map(fd=>(
+          <select key={fd.key} value={filters[fd.key]||''} onChange={e=>setFilters({...filters,[fd.key]:e.target.value})}>
+            <option value="">{fd.label}: todos</option>
+            {fd.options.map(o=> typeof o==='object'
+              ? <option key={o.id} value={o.id}>{o.label}</option>
+              : <option key={o} value={o}>{(STATUS_STYLES[o]&&STATUS_STYLES[o].l)||o}</option>)}
+          </select>
+        ))}
+        {extraToolbar}
+      </div>
+
+      {loading ? (
+        <div className="table-wrap"><div className="loading-state"><div className="spinner"></div>Carregando dados...</div></div>
+      ) : error ? (
+        <div className="table-wrap"><div className="empty-state">{I('alert',{style:{color:'var(--red)'}})}<h4>Não foi possível carregar</h4><p>{error}</p></div></div>
+      ) : filtered.length === 0 ? (
+        <div className="table-wrap">
+          <div className="empty-state">
+            {I(emptyIcon||'inbox')}
+            <h4>{emptyText || 'Nenhum registro ainda'}</h4>
+            <p>Clique em "Novo" para cadastrar o primeiro.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="table-wrap scrollbar">
+          <table>
+            <thead><tr>{columns.map(c=><th key={c.key}>{c.label}</th>)}<th></th></tr></thead>
+            <tbody>
+              {filtered.map(row=>(
+                <tr key={row.id} className={onRowClick?"clickable":""} onClick={()=>onRowClick&&onRowClick(row)}>
+                  {columns.map(c=><td key={c.key}>{c.render ? c.render(row) : row[c.key]}</td>)}
+                  <td onClick={e=>e.stopPropagation()}>
+                    <div className="row-actions">
+                      <button className="icon-mini" onClick={()=>openEdit(row)}>{I('edit')}</button>
+                      <button className="icon-mini" onClick={()=>setConfirmDel(row)}>{I('trash')}</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {modalOpen && (
+        <Modal title={editing?`Editar`:`Novo registro`} onClose={()=>setModalOpen(false)}
+          footer={<>
+            <button className="btn btn-ghost" onClick={()=>setModalOpen(false)}>Cancelar</button>
+            <button className="btn btn-primary" disabled={saving} onClick={save}>{saving?"Salvando...":"Salvar"}</button>
+          </>}>
+          <EntityForm fields={fields} value={form} onChange={setForm} relationOptions={relationOptions}/>
+        </Modal>
+      )}
+      {confirmDel && (
+        <ConfirmDialog title="Excluir registro?" message="Essa ação não pode ser desfeita." busy={deleting}
+          onConfirm={doDelete} onClose={()=>setConfirmDel(null)}/>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   CHART WRAPPER (Chart.js)
+   ============================================================ */
+function ChartCanvas({type, data, options, height}){
+  const ref = useRef(null); const chartRef = useRef(null);
+  useEffect(()=>{
+    if (!ref.current) return;
+    if (chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(ref.current.getContext('2d'), {type, data, options});
+    return ()=>{ if(chartRef.current) chartRef.current.destroy(); };
+  },[JSON.stringify(data), type]);
+  return <div className={height==='sm'?"chart-box chart-box-sm":"chart-box"}><canvas ref={ref}></canvas></div>;
+}
+function chartTextColor(){ return getComputedStyle(document.body).getPropertyValue('--text-dim').trim() || '#999'; }
+function chartGridColor(){ return getComputedStyle(document.body).getPropertyValue('--border-soft').trim() || '#333'; }
+
+/* ============================================================
+   DASHBOARD
+   ============================================================ */
+function Dashboard({theme}){
+  const {rows: clients} = useTable('clients');
+  const {rows: projects} = useTable('projects');
+  const {rows: leads} = useTable('leads');
+  const {rows: payments} = useTable('payments');
+  const {rows: updates} = useTable('updates');
+  const {rows: activities, loading: loadingAct} = useTable('activities', '*', 'created_at');
+
+  const now = new Date();
+  const curMonth = now.getMonth(), curYear = now.getFullYear();
+  const faturamentoMes = payments.filter(p=>p.status==='pago' && p.data && new Date(p.data+"T00:00:00").getMonth()===curMonth && new Date(p.data+"T00:00:00").getFullYear()===curYear)
+    .reduce((s,p)=>s+Number(p.valor||0),0);
+  const totalRecebido = payments.filter(p=>p.status==='pago').reduce((s,p)=>s+Number(p.valor||0),0);
+  const pendente = payments.filter(p=>p.status==='pendente').reduce((s,p)=>s+Number(p.valor||0),0);
+  const clientesAtivos = clients.filter(c=>c.status==='ativo').length;
+  const projetosAndamento = projects.filter(p=>['planejamento','em_desenvolvimento','aguardando_aprovacao'].includes(p.status)).length;
+  const projetosConcluidos = projects.filter(p=>p.status==='concluido').length;
+  const leadsNegociacao = leads.filter(l=>l.etapa==='negociacao').length;
+  const atualizacoesPendentes = updates.filter(u=>u.status!=='concluida').length;
+
+  const stats = [
+    {label:'Faturamento do mês', value:BRL(faturamentoMes), icon:'finance', color:'var(--teal)'},
+    {label:'Total recebido', value:BRL(totalRecebido), icon:'finance', color:'var(--primary)'},
+    {label:'Valores pendentes', value:BRL(pendente), icon:'quotes', color:'var(--amber)'},
+    {label:'Clientes ativos', value:clientesAtivos, icon:'clients', color:'var(--blue)'},
+    {label:'Projetos em andamento', value:projetosAndamento, icon:'projects', color:'var(--primary)'},
+    {label:'Projetos concluídos', value:projetosConcluidos, icon:'projects', color:'var(--teal)'},
+    {label:'Leads em negociação', value:leadsNegociacao, icon:'prospect', color:'var(--amber)'},
+    {label:'Atualizações pendentes', value:atualizacoesPendentes, icon:'updates', color:'var(--red)'},
+  ];
+
+  // faturamento por mês (últimos 6 meses)
+  const months = [];
+  for (let i=5;i>=0;i--){ const d=new Date(curYear,curMonth-i,1); months.push({y:d.getFullYear(), m:d.getMonth()}); }
+  const fatData = months.map(({y,m})=> payments.filter(p=>p.status==='pago' && p.data && new Date(p.data+"T00:00:00").getFullYear()===y && new Date(p.data+"T00:00:00").getMonth()===m).reduce((s,p)=>s+Number(p.valor||0),0));
+
+  const statusCount = {};
+  projects.forEach(p=>{ statusCount[p.status]=(statusCount[p.status]||0)+1; });
+  const etapaCount = {};
+  ['nao_contatado','contatado','respondeu','interessado','negociacao','fechado','recusou'].forEach(e=> etapaCount[e]=0);
+  leads.forEach(l=>{ etapaCount[l.etapa]=(etapaCount[l.etapa]||0)+1; });
+
+  const gridColor = chartGridColor(), textColor = chartTextColor();
+
+  return (
+    <div>
+      <div className="section-head">
+        <div><div className="section-title">Visão geral</div><div className="section-sub">Resumo da operação da PixelCodeStudio</div></div>
+      </div>
+
+      {!CONFIGURED && (
+        <div className="demo-banner">{I('info')} Conecte seu projeto Supabase no topo do arquivo (SUPABASE_URL / ANON_KEY) para os dados funcionarem de verdade.</div>
+      )}
+
+      <div className="grid grid-4" style={{marginBottom:20}}>
+        {stats.map((s,i)=>(
+          <div className="card stat-card" key={i}>
+            <div className="stat-top">
+              <span className="stat-label">{s.label}</span>
+              <div className="stat-icon" style={{background:s.color+'1f', color:s.color}}>{I(s.icon)}</div>
+            </div>
+            <div className="stat-value">{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-2" style={{marginBottom:20}}>
+        <div className="card">
+          <div className="card-title">Faturamento por mês</div>
+          <div className="card-sub">Pagamentos recebidos, últimos 6 meses</div>
+          <ChartCanvas type="bar" data={{
+            labels: months.map(({y,m})=>monthLabel(y,m)),
+            datasets:[{label:'Faturamento', data:fatData, backgroundColor:'#6C63FF', borderRadius:6, maxBarThickness:34}]
+          }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+            scales:{x:{grid:{display:false},ticks:{color:textColor}},y:{grid:{color:gridColor},ticks:{color:textColor,callback:v=>'R$'+v}}}}}/>
+        </div>
+        <div className="card">
+          <div className="card-title">Projetos por status</div>
+          <div className="card-sub">Distribuição atual</div>
+          <ChartCanvas type="doughnut" data={{
+            labels: Object.keys(statusCount).map(k=>(STATUS_STYLES[k]&&STATUS_STYLES[k].l)||k),
+            datasets:[{data:Object.values(statusCount), backgroundColor:['#4F8EFF','#F5A623','#6C63FF','#B98CFF','#1FD1A6','#FF5D6C'], borderWidth:0}]
+          }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:textColor,boxWidth:10,font:{size:11}}}}}}/>
+        </div>
+      </div>
+
+      <div className="grid grid-2" style={{marginBottom:20}}>
+        <div className="card">
+          <div className="card-title">Leads por etapa</div>
+          <div className="card-sub">Pipeline de prospecção</div>
+          <ChartCanvas type="bar" data={{
+            labels: Object.keys(etapaCount).map(k=>STATUS_STYLES[k].l),
+            datasets:[{data:Object.values(etapaCount), backgroundColor:'#1FD1A6', borderRadius:6}]
+          }} options={{indexAxis:'y', responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+            scales:{x:{grid:{color:gridColor},ticks:{color:textColor,stepSize:1}},y:{grid:{display:false},ticks:{color:textColor,font:{size:11}}}}}}/>
+        </div>
+        <div className="card">
+          <div className="card-title">Recebimentos: pago x pendente</div>
+          <div className="card-sub">Valores totais por status</div>
+          <ChartCanvas type="doughnut" data={{
+            labels:['Pago','Pendente'],
+            datasets:[{data:[totalRecebido, pendente], backgroundColor:['#1FD1A6','#F5A623'], borderWidth:0}]
+          }} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:textColor,boxWidth:10}}}}}/>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">Atividades recentes</div>
+        <div className="card-sub">Últimas movimentações no sistema</div>
+        {loadingAct ? <div className="loading-state"><div className="spinner"></div>Carregando...</div> :
+         activities.length===0 ? <div className="empty-state">{I('inbox')}<h4>Sem atividades ainda</h4><p>As ações do painel vão aparecer aqui.</p></div> :
+        <div style={{display:'flex',flexDirection:'column',gap:0}}>
+          {activities.slice(0,10).map(a=>(
+            <div key={a.id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 2px',borderBottom:'1px solid var(--border-soft)'}}>
+              <span className="pulse-dot" style={{animation:'none',flexShrink:0}}></span>
+              <span style={{flex:1,fontSize:13}}>{a.descricao}</span>
+              <span style={{fontSize:11,color:'var(--text-faint)',flexShrink:0}} className="mono">{timeAgo(a.created_at)}</span>
+            </div>
+          ))}
+        </div>}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   CLIENTES
+   ============================================================ */
+const CLIENT_FIELDS = [
+  {key:'nome', label:'Nome', required:true},
+  {key:'empresa', label:'Empresa'},
+  {key:'whatsapp', label:'WhatsApp', placeholder:'55DDDNÚMERO'},
+  {key:'email', label:'E-mail', type:'email'},
+  {key:'cidade', label:'Cidade'},
+  {key:'site', label:'Site'},
+  {key:'instagram', label:'Instagram'},
+  {key:'status', label:'Status', type:'select', options:['lead','ativo','inativo','finalizado']},
+  {key:'valor_total_contratado', label:'Valor total contratado', type:'number'},
+  {key:'observacoes', label:'Observações', type:'textarea', full:true},
+];
+function ClientesPage({onOpenClient}){
+  return (
+    <EntityPage
+      title="Clientes" subtitle="Toda a carteira de clientes da PixelCodeStudio"
+      table="clients" fields={CLIENT_FIELDS} emptyIcon="clients" emptyText="Nenhum cliente cadastrado"
+      searchKeys={['nome','empresa','email']}
+      filterDefs={[{key:'status', label:'Status', options:['lead','ativo','inativo','finalizado']}]}
+      onRowClick={onOpenClient}
+      columns={[
+        {key:'nome', label:'Cliente', render:r=><div><div className="cell-primary">{r.nome}</div><div className="cell-dim" style={{fontSize:11.5}}>{r.empresa||'—'}</div></div>},
+        {key:'whatsapp', label:'Contato', render:r=><div className="cell-dim">{r.whatsapp||r.email||'—'}</div>},
+        {key:'cidade', label:'Cidade', render:r=>r.cidade||'—'},
+        {key:'status', label:'Status', render:r=><Badge status={r.status}/>},
+        {key:'valor_total_contratado', label:'Valor contratado', render:r=><span className="mono">{BRL(r.valor_total_contratado)}</span>},
+      ]}
+    />
+  );
+}
+
+function ClienteDetail({clientId, onBack}){
+  const [client,setClient] = useState(null);
+  const [loading,setLoading] = useState(true);
+  const [tab,setTab] = useState('projetos');
+  const {rows: projects} = useTable('projects', '*', 'created_at', [clientId]);
+  const {rows: payments} = useTable('payments', '*', 'created_at', [clientId]);
+  const {rows: updates} = useTable('updates', '*', 'created_at', [clientId]);
+
+  useEffect(()=>{
+    let active = true;
+    setLoading(true);
+    supabase.from('clients').select('*').eq('id', clientId).single().then(({data})=>{ if(active){ setClient(data); setLoading(false);} });
+    return ()=>{ active=false; };
+  },[clientId]);
+
+  const cProjects = projects.filter(p=>p.client_id===clientId);
+  const cPayments = payments.filter(p=>p.client_id===clientId);
+  const cUpdates = updates.filter(u=>u.client_id===clientId);
+
+  if (loading) return <div className="loading-state"><div className="spinner"></div>Carregando cliente...</div>;
+  if (!client) return <div className="empty-state">{I('alert')}<h4>Cliente não encontrado</h4></div>;
+
+  return (
+    <div>
+      <div className="back-link" onClick={onBack}>{I('back')} Voltar para clientes</div>
+      <div className="detail-head">
+        <div>
+          <h2 style={{fontSize:22,marginBottom:4}}>{client.nome}</h2>
+          <div style={{color:'var(--text-dim)',fontSize:13}}>{client.empresa || 'Sem empresa informada'}</div>
+        </div>
+        <Badge status={client.status}/>
+      </div>
+
+      <div className="card" style={{marginBottom:20}}>
+        <div className="info-grid">
+          <div><div className="lbl">WhatsApp</div>{client.whatsapp || '—'}</div>
+          <div><div className="lbl">E-mail</div>{client.email || '—'}</div>
+          <div><div className="lbl">Cidade</div>{client.cidade || '—'}</div>
+          <div><div className="lbl">Site</div>{client.site || '—'}</div>
+          <div><div className="lbl">Instagram</div>{client.instagram || '—'}</div>
+          <div><div className="lbl">Valor total contratado</div><span className="mono">{BRL(client.valor_total_contratado)}</span></div>
+          <div className="span-2" style={{gridColumn:'1 / -1'}}><div className="lbl">Observações</div>{client.observacoes || '—'}</div>
+        </div>
+      </div>
+
+      <div className="tabs">
+        <div className={"tab "+(tab==='projetos'?'active':'')} onClick={()=>setTab('projetos')}>Projetos ({cProjects.length})</div>
+        <div className={"tab "+(tab==='pagamentos'?'active':'')} onClick={()=>setTab('pagamentos')}>Pagamentos ({cPayments.length})</div>
+        <div className={"tab "+(tab==='atualizacoes'?'active':'')} onClick={()=>setTab('atualizacoes')}>Atualizações ({cUpdates.length})</div>
+      </div>
+
+      {tab==='projetos' && (
+        cProjects.length===0 ? <div className="empty-state">{I('projects')}<h4>Nenhum projeto</h4></div> :
+        <div className="table-wrap"><table><thead><tr><th>Projeto</th><th>Status</th><th>Valor</th><th>Prazo</th></tr></thead>
+        <tbody>{cProjects.map(p=><tr key={p.id}><td className="cell-primary">{p.nome}</td><td><Badge status={p.status}/></td><td className="mono">{BRL(p.valor)}</td><td className="cell-dim">{fmtDate(p.prazo)}</td></tr>)}</tbody></table></div>
+      )}
+      {tab==='pagamentos' && (
+        cPayments.length===0 ? <div className="empty-state">{I('finance')}<h4>Nenhum pagamento</h4></div> :
+        <div className="table-wrap"><table><thead><tr><th>Descrição</th><th>Data</th><th>Status</th><th>Valor</th></tr></thead>
+        <tbody>{cPayments.map(p=><tr key={p.id}><td>{p.descricao||'—'}</td><td className="cell-dim">{fmtDate(p.data)}</td><td><Badge status={p.status}/></td><td className="mono">{BRL(p.valor)}</td></tr>)}</tbody></table></div>
+      )}
+      {tab==='atualizacoes' && (
+        cUpdates.length===0 ? <div className="empty-state">{I('updates')}<h4>Nenhuma atualização</h4></div> :
+        <div className="table-wrap"><table><thead><tr><th>Descrição</th><th>Solicitada em</th><th>Status</th><th>Valor</th></tr></thead>
+        <tbody>{cUpdates.map(u=><tr key={u.id}><td>{u.descricao}</td><td className="cell-dim">{fmtDate(u.data_solicitacao)}</td><td><Badge status={u.status}/></td><td className="mono">{BRL(u.valor)}</td></tr>)}</tbody></table></div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   PROJETOS
+   ============================================================ */
+function ProjetosPage(){
+  const {rows: clients} = useTable('clients');
+  const clientOpts = clients.map(c=>({id:c.id, label:c.nome + (c.empresa?` (${c.empresa})`:'')}));
+  const fields = [
+    {key:'nome', label:'Nome do projeto', required:true, full:true},
+    {key:'client_id', label:'Cliente', type:'select', relation:'clients'},
+    {key:'descricao', label:'Descrição', type:'textarea', full:true},
+    {key:'valor', label:'Valor', type:'number'},
+    {key:'status', label:'Status', type:'select', options:['planejamento','em_desenvolvimento','aguardando_aprovacao','em_manutencao','concluido','cancelado']},
+    {key:'data_inicio', label:'Data de início', type:'date'},
+    {key:'prazo', label:'Prazo', type:'date'},
+    {key:'link_site', label:'Link do site'},
+    {key:'link_github', label:'Link do GitHub'},
+    {key:'tecnologias', label:'Tecnologias', full:true},
+    {key:'observacoes', label:'Observações', type:'textarea', full:true},
+  ];
+  const clientMap = useMemo(()=>Object.fromEntries(clients.map(c=>[c.id,c])),[clients]);
+  return (
+    <EntityPage
+      title="Projetos" subtitle="Todos os projetos em andamento e finalizados"
+      table="projects" fields={fields} emptyIcon="projects" emptyText="Nenhum projeto cadastrado"
+      searchKeys={['nome']}
+      relationOptions={{clients:clientOpts}}
+      filterDefs={[
+        {key:'status', label:'Status', options:['planejamento','em_desenvolvimento','aguardando_aprovacao','em_manutencao','concluido','cancelado']},
+        {key:'client_id', label:'Cliente', options:clientOpts},
+      ]}
+      columns={[
+        {key:'nome', label:'Projeto', render:r=><div className="cell-primary">{r.nome}</div>},
+        {key:'client_id', label:'Cliente', render:r=><span className="cell-dim">{clientMap[r.client_id]?.nome || '—'}</span>},
+        {key:'status', label:'Status', render:r=><Badge status={r.status}/>},
+        {key:'valor', label:'Valor', render:r=><span className="mono">{BRL(r.valor)}</span>},
+        {key:'prazo', label:'Prazo', render:r=><span className="cell-dim">{fmtDate(r.prazo)}</span>},
+        {key:'link_site', label:'Site', render:r=>r.link_site ? <a href={r.link_site.startsWith('http')?r.link_site:'https://'+r.link_site} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{color:'var(--primary)'}}>{I('external',{width:14,height:14})}</a> : '—'},
+      ]}
+    />
+  );
+}
+
+/* ============================================================
+   FINANCEIRO
+   ============================================================ */
+function FinanceiroPage(){
+  const [tab,setTab] = useState('receitas');
+  const {rows: clients} = useTable('clients');
+  const {rows: projects} = useTable('projects');
+  const {rows: payments, refresh: refreshPay} = useTable('payments');
+  const {rows: expenses} = useTable('expenses');
+
+  const receitaTotal = payments.filter(p=>p.status==='pago').reduce((s,p)=>s+Number(p.valor||0),0);
+  const despesaTotal = expenses.reduce((s,e)=>s+Number(e.valor||0),0);
+  const lucro = receitaTotal - despesaTotal;
+  const pendenteTotal = payments.filter(p=>p.status==='pendente').reduce((s,p)=>s+Number(p.valor||0),0);
+  const now = new Date();
+  const receitaMensal = payments.filter(p=>p.status==='pago' && p.data && new Date(p.data+"T00:00:00").getMonth()===now.getMonth() && new Date(p.data+"T00:00:00").getFullYear()===now.getFullYear()).reduce((s,p)=>s+Number(p.valor||0),0);
+  const receitaAnual = payments.filter(p=>p.status==='pago' && p.data && new Date(p.data+"T00:00:00").getFullYear()===now.getFullYear()).reduce((s,p)=>s+Number(p.valor||0),0);
+
+  const months = []; for (let i=5;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth()-i,1); months.push({y:d.getFullYear(),m:d.getMonth()}); }
+  const recData = months.map(({y,m})=>payments.filter(p=>p.status==='pago'&&p.data&&new Date(p.data+"T00:00:00").getFullYear()===y&&new Date(p.data+"T00:00:00").getMonth()===m).reduce((s,p)=>s+Number(p.valor||0),0));
+  const despData = months.map(({y,m})=>expenses.filter(e=>e.data&&new Date(e.data+"T00:00:00").getFullYear()===y&&new Date(e.data+"T00:00:00").getMonth()===m).reduce((s,e)=>s+Number(e.valor||0),0));
+  const gridColor = chartGridColor(), textColor = chartTextColor();
+
+  const clientOpts = clients.map(c=>({id:c.id, label:c.nome}));
+  const projectOpts = projects.map(p=>({id:p.id, label:p.nome}));
+  const clientMap = useMemo(()=>Object.fromEntries(clients.map(c=>[c.id,c])),[clients]);
+  const projectMap = useMemo(()=>Object.fromEntries(projects.map(p=>[p.id,p])),[projects]);
+
+  const paymentFields = [
+    {key:'client_id', label:'Cliente', type:'select', relation:'clients'},
+    {key:'project_id', label:'Projeto', type:'select', relation:'projects'},
+    {key:'descricao', label:'Descrição', full:true},
+    {key:'valor', label:'Valor', type:'number'},
+    {key:'data', label:'Data', type:'date'},
+    {key:'metodo', label:'Método', placeholder:'PIX, Cartão, Boleto...'},
+    {key:'status', label:'Status', type:'select', options:['pago','pendente']},
+  ];
+  const expenseFields = [
+    {key:'descricao', label:'Descrição', required:true, full:true},
+    {key:'categoria', label:'Categoria', placeholder:'Infraestrutura, Ferramentas...'},
+    {key:'valor', label:'Valor', type:'number'},
+    {key:'data', label:'Data', type:'date'},
+    {key:'observacao', label:'Observação', type:'textarea', full:true},
+  ];
+
+  const summary = (
+    <div className="grid grid-4" style={{marginBottom:18}}>
+      {[
+        {l:'Receita total', v:BRL(receitaTotal), c:'var(--teal)'},
+        {l:'Despesas', v:BRL(despesaTotal), c:'var(--red)'},
+        {l:'Lucro', v:BRL(lucro), c:lucro>=0?'var(--teal)':'var(--red)'},
+        {l:'Pendente', v:BRL(pendenteTotal), c:'var(--amber)'},
+        {l:'Receita mensal', v:BRL(receitaMensal), c:'var(--blue)'},
+        {l:'Receita anual', v:BRL(receitaAnual), c:'var(--primary)'},
+      ].map((s,i)=>(
+        <div className="card stat-card" key={i}>
+          <div className="stat-label">{s.l}</div>
+          <div className="stat-value" style={{color:s.c}}>{s.v}</div>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="section-head"><div><div className="section-title">Financeiro</div><div className="section-sub">Receitas, despesas e lucro da operação</div></div></div>
+      {summary}
+      <div className="card" style={{marginBottom:20}}>
+        <div className="card-title">Receitas x Despesas</div>
+        <div className="card-sub">Últimos 6 meses</div>
+        <ChartCanvas type="bar" data={{labels:months.map(({y,m})=>monthLabel(y,m)),
+          datasets:[
+            {label:'Receitas', data:recData, backgroundColor:'#1FD1A6', borderRadius:6, maxBarThickness:26},
+            {label:'Despesas', data:despData, backgroundColor:'#FF5D6C', borderRadius:6, maxBarThickness:26},
+          ]}} options={{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:textColor}}},
+          scales:{x:{grid:{display:false},ticks:{color:textColor}},y:{grid:{color:gridColor},ticks:{color:textColor}}}}}/>
+      </div>
+
+      <div className="tabs">
+        <div className={"tab "+(tab==='receitas'?'active':'')} onClick={()=>setTab('receitas')}>Receitas</div>
+        <div className={"tab "+(tab==='despesas'?'active':'')} onClick={()=>setTab('despesas')}>Despesas</div>
+      </div>
+
+      {tab==='receitas' ? (
+        <EntityPage title="" table="payments" fields={paymentFields} emptyIcon="finance" emptyText="Nenhuma receita registrada"
+          relationOptions={{clients:clientOpts, projects:projectOpts}}
+          filterDefs={[{key:'status', label:'Status', options:['pago','pendente']}]}
+          searchKeys={['descricao']}
+          columns={[
+            {key:'descricao', label:'Descrição', render:r=><span className="cell-primary">{r.descricao||'—'}</span>},
+            {key:'client_id', label:'Cliente', render:r=><span className="cell-dim">{clientMap[r.client_id]?.nome||'—'}</span>},
+            {key:'project_id', label:'Projeto', render:r=><span className="cell-dim">{projectMap[r.project_id]?.nome||'—'}</span>},
+            {key:'data', label:'Data', render:r=>fmtDate(r.data)},
+            {key:'metodo', label:'Método', render:r=>r.metodo||'—'},
+            {key:'status', label:'Status', render:r=><Badge status={r.status}/>},
+            {key:'valor', label:'Valor', render:r=><span className="mono">{BRL(r.valor)}</span>},
+          ]}/>
+      ) : (
+        <EntityPage title="" table="expenses" fields={expenseFields} emptyIcon="finance" emptyText="Nenhuma despesa registrada"
+          searchKeys={['descricao','categoria']}
+          columns={[
+            {key:'descricao', label:'Descrição', render:r=><span className="cell-primary">{r.descricao}</span>},
+            {key:'categoria', label:'Categoria', render:r=>r.categoria||'—'},
+            {key:'data', label:'Data', render:r=>fmtDate(r.data)},
+            {key:'valor', label:'Valor', render:r=><span className="mono" style={{color:'var(--red)'}}>-{BRL(r.valor)}</span>},
+          ]}/>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   ATUALIZAÇÕES
+   ============================================================ */
+function AtualizacoesPage(){
+  const {rows: clients} = useTable('clients');
+  const {rows: projects} = useTable('projects');
+  const {rows: updates} = useTable('updates');
+  const clientOpts = clients.map(c=>({id:c.id, label:c.nome}));
+  const projectOpts = projects.map(p=>({id:p.id, label:p.nome}));
+  const clientMap = useMemo(()=>Object.fromEntries(clients.map(c=>[c.id,c])),[clients]);
+  const projectMap = useMemo(()=>Object.fromEntries(projects.map(p=>[p.id,p])),[projects]);
+  const ganho = updates.filter(u=>['concluida','aguardando_pagamento'].includes(u.status)).reduce((s,u)=>s+Number(u.valor||0),0);
+
+  const fields = [
+    {key:'client_id', label:'Cliente', type:'select', relation:'clients'},
+    {key:'project_id', label:'Projeto', type:'select', relation:'projects'},
+    {key:'descricao', label:'Descrição da alteração', required:true, full:true},
+    {key:'data_solicitacao', label:'Data da solicitação', type:'date'},
+    {key:'valor', label:'Valor cobrado', type:'number'},
+    {key:'status', label:'Status', type:'select', options:['solicitada','em_andamento','concluida','aguardando_pagamento']},
+    {key:'data_conclusao', label:'Data de conclusão', type:'date'},
+    {key:'observacoes', label:'Observações', type:'textarea', full:true},
+  ];
+  return (
+    <EntityPage
+      title="Atualizações" subtitle="Alterações solicitadas por clientes em projetos já entregues"
+      table="updates" fields={fields} emptyIcon="updates" emptyText="Nenhuma atualização registrada"
+      relationOptions={{clients:clientOpts, projects:projectOpts}}
+      searchKeys={['descricao']}
+      filterDefs={[{key:'status', label:'Status', options:['solicitada','em_andamento','concluida','aguardando_pagamento']}]}
+      summaryCards={
+        <div className="grid grid-4" style={{marginBottom:18}}>
+          <div className="card stat-card"><div className="stat-label">Total de atualizações</div><div className="stat-value">{updates.length}</div></div>
+          <div className="card stat-card"><div className="stat-label">Em aberto</div><div className="stat-value">{updates.filter(u=>u.status!=='concluida').length}</div></div>
+          <div className="card stat-card"><div className="stat-label">Aguardando pagamento</div><div className="stat-value" style={{color:'var(--red)'}}>{updates.filter(u=>u.status==='aguardando_pagamento').length}</div></div>
+          <div className="card stat-card"><div className="stat-label">Ganho com atualizações</div><div className="stat-value" style={{color:'var(--teal)'}}>{BRL(ganho)}</div></div>
+        </div>
+      }
+      columns={[
+        {key:'descricao', label:'Descrição', render:r=><span className="cell-primary">{r.descricao}</span>},
+        {key:'client_id', label:'Cliente', render:r=><span className="cell-dim">{clientMap[r.client_id]?.nome||'—'}</span>},
+        {key:'project_id', label:'Projeto', render:r=><span className="cell-dim">{projectMap[r.project_id]?.nome||'—'}</span>},
+        {key:'data_solicitacao', label:'Solicitada em', render:r=>fmtDate(r.data_solicitacao)},
+        {key:'status', label:'Status', render:r=><Badge status={r.status}/>},
+        {key:'valor', label:'Valor', render:r=><span className="mono">{BRL(r.valor)}</span>},
+      ]}
+    />
+  );
+}
+
+/* ============================================================
+   PROSPECÇÃO — Kanban
+   ============================================================ */
+const PIPELINE = ['nao_contatado','contatado','respondeu','interessado','negociacao','fechado','recusou'];
+function ProspeccaoPage(){
+  const toast = useToast();
+  const {rows: leads, refresh} = useTable('leads');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const dragId = useRef(null);
+  const [dragOverCol, setDragOverCol] = useState(null);
+
+  const fields = [
+    {key:'empresa', label:'Empresa', required:true, full:true},
+    {key:'segmento', label:'Segmento'},
+    {key:'responsavel', label:'Nome do responsável'},
+    {key:'whatsapp', label:'WhatsApp'},
+    {key:'instagram', label:'Instagram'},
+    {key:'site_atual', label:'Site atual'},
+    {key:'cidade', label:'Cidade'},
+    {key:'data_primeiro_contato', label:'Primeiro contato', type:'date'},
+    {key:'ultimo_contato', label:'Último contato', type:'date'},
+    {key:'potencial', label:'Potencial de venda', type:'select', options:['baixo','medio','alto']},
+    {key:'valor_estimado', label:'Valor estimado', type:'number'},
+    {key:'etapa', label:'Etapa', type:'select', options:PIPELINE},
+    {key:'observacoes', label:'Observações', type:'textarea', full:true},
+  ];
+
+  const openNew = () => { setEditing(null); setForm({etapa:'nao_contatado'}); setModalOpen(true); };
+  const openEdit = (l) => { setEditing(l); setForm({...l}); setModalOpen(true); };
+
+  const save = async () => {
+    setSaving(true);
+    const payload = {...form}; delete payload.id; delete payload.created_at;
+    payload.valor_estimado = Number(payload.valor_estimado||0);
+    ['data_primeiro_contato','ultimo_contato'].forEach(k=>{ if(payload[k]==='') payload[k]=null; });
+    let res = editing ? await supabase.from('leads').update(payload).eq('id',editing.id) : await supabase.from('leads').insert(payload);
+    setSaving(false);
+    if (res.error){ toast(res.error.message,'error'); return; }
+    toast(editing?"Lead atualizado.":"Lead cadastrado.", 'success');
+    setModalOpen(false); refresh();
+  };
+  const doDelete = async () => {
+    setDeleting(true);
+    const {error} = await supabase.from('leads').delete().eq('id', confirmDel.id);
+    setDeleting(false);
+    if (error){ toast(error.message,'error'); return; }
+    toast("Lead excluído.",'success'); setConfirmDel(null); refresh();
+  };
+  const moveLead = async (id, etapa) => {
+    const {error} = await supabase.from('leads').update({etapa}).eq('id', id);
+    if (error) toast(error.message,'error'); else refresh();
+  };
+
+  const grouped = PIPELINE.reduce((acc,e)=>{ acc[e]=leads.filter(l=>l.etapa===e); return acc; },{});
+  const valorTotal = leads.reduce((s,l)=>s+Number(l.valor_estimado||0),0);
+  const fechados = leads.filter(l=>l.etapa==='fechado').length;
+  const taxaConv = leads.length ? ((fechados/leads.length)*100).toFixed(1) : '0.0';
+
+  return (
+    <div>
+      <div className="section-head">
+        <div><div className="section-title">Prospecção</div><div className="section-sub">Pipeline de leads — arraste os cartões entre as etapas</div></div>
+        <button className="btn btn-primary" onClick={openNew}>{I('plus',{width:15,height:15})} Novo lead</button>
+      </div>
+
+      <div className="grid grid-4" style={{marginBottom:18}}>
+        <div className="card stat-card"><div className="stat-label">Total de leads</div><div className="stat-value">{leads.length}</div></div>
+        <div className="card stat-card"><div className="stat-label">Em negociação</div><div className="stat-value">{grouped.negociacao?.length||0}</div></div>
+        <div className="card stat-card"><div className="stat-label">Valor estimado no funil</div><div className="stat-value">{BRL(valorTotal)}</div></div>
+        <div className="card stat-card"><div className="stat-label">Taxa de conversão</div><div className="stat-value">{taxaConv}%</div></div>
+      </div>
+
+      {leads.length===0 ? (
+        <div className="table-wrap"><div className="empty-state">{I('prospect')}<h4>Nenhum lead cadastrado</h4><p>Clique em "Novo lead" para começar seu funil.</p></div></div>
+      ) : (
+        <div className="kanban scrollbar">
+          {PIPELINE.map(stage=>(
+            <div className={"kanban-col "+(dragOverCol===stage?"drag-over":"")} key={stage}
+              onDragOver={e=>{e.preventDefault(); setDragOverCol(stage);}}
+              onDragLeave={()=>setDragOverCol(null)}
+              onDrop={e=>{ e.preventDefault(); setDragOverCol(null); if(dragId.current) moveLead(dragId.current, stage); }}>
+              <div className="kanban-col-head">
+                <span className="kanban-col-title" style={{color:STATUS_STYLES[stage].c}}>{STATUS_STYLES[stage].l}</span>
+                <span className="kanban-count">{grouped[stage].length}</span>
+              </div>
+              <div className="kanban-list scrollbar">
+                {grouped[stage].map(l=>(
+                  <div key={l.id} className="kanban-card" draggable
+                    onDragStart={()=>{dragId.current=l.id;}}
+                    onClick={()=>openEdit(l)}>
+                    <h5>{l.empresa}</h5>
+                    <div className="cell-dim" style={{fontSize:11.5}}>{l.segmento||'—'} · {l.responsavel||'—'}</div>
+                    <div className="kc-meta">
+                      <span className="mono">{BRL(l.valor_estimado)}</span>
+                      <Badge status={l.potencial}/>
+                    </div>
+                  </div>
+                ))}
+                {grouped[stage].length===0 && <div style={{fontSize:11.5,color:'var(--text-faint)',textAlign:'center',padding:'14px 0'}}>Vazio</div>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {modalOpen && (
+        <Modal title={editing?"Editar lead":"Novo lead"} onClose={()=>setModalOpen(false)}
+          footer={<>
+            {editing && <button className="btn btn-danger" style={{marginRight:'auto'}} onClick={()=>{setModalOpen(false); setConfirmDel(editing);}}>{I('trash',{width:14,height:14})} Excluir</button>}
+            <button className="btn btn-ghost" onClick={()=>setModalOpen(false)}>Cancelar</button>
+            <button className="btn btn-primary" disabled={saving} onClick={save}>{saving?"Salvando...":"Salvar"}</button>
+          </>}>
+          <EntityForm fields={fields} value={form} onChange={setForm} relationOptions={{}}/>
+        </Modal>
+      )}
+      {confirmDel && <ConfirmDialog title="Excluir lead?" message="Essa ação não pode ser desfeita." busy={deleting} onConfirm={doDelete} onClose={()=>setConfirmDel(null)}/>}
+    </div>
+  );
+}
+
+/* ============================================================
+   ORÇAMENTOS
+   ============================================================ */
+function OrcamentosPage(){
+  const toast = useToast();
+  const {rows: clients} = useTable('clients');
+  const {rows: quotes, refresh} = useTable('quotes');
+  const clientOpts = clients.map(c=>({id:c.id, label:c.nome}));
+  const clientMap = useMemo(()=>Object.fromEntries(clients.map(c=>[c.id,c])),[clients]);
+
+  const fields = [
+    {key:'client_id', label:'Cliente', type:'select', relation:'clients'},
+    {key:'servico', label:'Serviço'},
+    {key:'descricao', label:'Descrição', type:'textarea', full:true},
+    {key:'valor', label:'Valor', type:'number'},
+    {key:'data', label:'Data', type:'date'},
+    {key:'validade', label:'Validade', type:'date'},
+    {key:'status', label:'Status', type:'select', options:['rascunho','enviado','visualizado','aceito','recusado','expirado']},
+  ];
+
+  const convertToProject = async (quote) => {
+    const payload = {
+      client_id: quote.client_id, nome: quote.servico ? `${quote.servico} — ${clientMap[quote.client_id]?.nome||''}` : 'Novo projeto',
+      descricao: quote.descricao, valor: quote.valor, status: 'planejamento', data_inicio: new Date().toISOString().slice(0,10),
+    };
+    const {error} = await supabase.from('projects').insert(payload);
+    if (error){ toast(error.message,'error'); return; }
+    toast("Orçamento convertido em projeto!", 'success'); refresh();
+  };
+
+  return (
+    <EntityPage
+      title="Orçamentos" subtitle="Propostas enviadas para clientes e leads"
+      table="quotes" fields={fields} emptyIcon="quotes" emptyText="Nenhum orçamento cadastrado"
+      relationOptions={{clients:clientOpts}}
+      filterDefs={[{key:'status', label:'Status', options:['rascunho','enviado','visualizado','aceito','recusado','expirado']}]}
+      extraToolbar={<span style={{fontSize:11.5,color:'var(--text-faint)'}}>Orçamentos aceitos podem virar projeto</span>}
+      columns={[
+        {key:'client_id', label:'Cliente', render:r=><span className="cell-primary">{clientMap[r.client_id]?.nome||'—'}</span>},
+        {key:'servico', label:'Serviço', render:r=>r.servico||'—'},
+        {key:'data', label:'Data', render:r=>fmtDate(r.data)},
+        {key:'validade', label:'Validade', render:r=>fmtDate(r.validade)},
+        {key:'status', label:'Status', render:r=><Badge status={r.status}/>},
+        {key:'valor', label:'Valor', render:r=><span className="mono">{BRL(r.valor)}</span>},
+        {key:'_convert', label:'', render:r=> r.status==='aceito' ? <button className="btn btn-sm btn-ghost" onClick={e=>{e.stopPropagation(); convertToProject(r);}}>Virar projeto</button> : null},
+      ]}
+    />
+  );
+}
+
+/* ============================================================
+   SERVIÇOS
+   ============================================================ */
+function ServicosPage(){
+  const fields = [
+    {key:'nome', label:'Nome do serviço', required:true},
+    {key:'preco_inicial', label:'Preço inicial', type:'number'},
+    {key:'prazo_estimado', label:'Prazo estimado'},
+    {key:'descricao', label:'Descrição', type:'textarea', full:true},
+    {key:'observacoes', label:'Observações', type:'textarea', full:true},
+  ];
+  return (
+    <EntityPage
+      title="Serviços" subtitle="Catálogo de serviços oferecidos pela PixelCodeStudio"
+      table="services" fields={fields} emptyIcon="services" emptyText="Nenhum serviço cadastrado"
+      searchKeys={['nome']}
+      columns={[
+        {key:'nome', label:'Serviço', render:r=><span className="cell-primary">{r.nome}</span>},
+        {key:'descricao', label:'Descrição', render:r=><span className="cell-dim">{(r.descricao||'—').slice(0,60)}</span>},
+        {key:'prazo_estimado', label:'Prazo', render:r=>r.prazo_estimado||'—'},
+        {key:'preco_inicial', label:'Preço inicial', render:r=><span className="mono">{BRL(r.preco_inicial)}</span>},
+      ]}
+    />
+  );
+}
+
+/* ============================================================
+   PORTFÓLIO
+   ============================================================ */
+function PortfolioPage(){
+  const {rows: clients} = useTable('clients');
+  const clientOpts = clients.map(c=>({id:c.id, label:c.nome}));
+  const clientMap = useMemo(()=>Object.fromEntries(clients.map(c=>[c.id,c])),[clients]);
+  const fields = [
+    {key:'nome', label:'Nome do projeto', required:true},
+    {key:'client_id', label:'Cliente', type:'select', relation:'clients'},
+    {key:'link', label:'Link'},
+    {key:'imagem_url', label:'URL da imagem'},
+    {key:'tecnologias', label:'Tecnologias'},
+    {key:'data', label:'Data', type:'date'},
+    {key:'destaque', label:'Destaque no portfólio', type:'checkbox'},
+    {key:'descricao', label:'Descrição', type:'textarea', full:true},
+  ];
+  return (
+    <EntityPage
+      title="Portfólio interno" subtitle="Registro dos projetos entregues pela PixelCodeStudio"
+      table="portfolio" fields={fields} emptyIcon="portfolio" emptyText="Nenhum item no portfólio"
+      relationOptions={{clients:clientOpts}}
+      searchKeys={['nome']}
+      columns={[
+        {key:'nome', label:'Projeto', render:r=><div className="cell-primary">{r.nome} {r.destaque && <span className="badge" style={{marginLeft:6,background:'var(--primary)1f',color:'var(--primary)'}}>Destaque</span>}</div>},
+        {key:'client_id', label:'Cliente', render:r=><span className="cell-dim">{clientMap[r.client_id]?.nome||'—'}</span>},
+        {key:'tecnologias', label:'Tecnologias', render:r=>r.tecnologias||'—'},
+        {key:'data', label:'Data', render:r=>fmtDate(r.data)},
+        {key:'link', label:'Link', render:r=>r.link ? <a href={r.link.startsWith('http')?r.link:'https://'+r.link} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{color:'var(--primary)'}}>{I('external',{width:14,height:14})}</a> : '—'},
+      ]}
+    />
+  );
+}
+
+/* ============================================================
+   RELATÓRIOS
+   ============================================================ */
+function RelatoriosPage(){
+  const {rows: clients} = useTable('clients');
+  const {rows: projects} = useTable('projects');
+  const {rows: payments} = useTable('payments');
+  const {rows: leads} = useTable('leads');
+  const {rows: updates} = useTable('updates');
+  const now = new Date();
+  const receitaTotal = payments.filter(p=>p.status==='pago').reduce((s,p)=>s+Number(p.valor||0),0);
+  const receitaMensal = payments.filter(p=>p.status==='pago'&&p.data&&new Date(p.data+"T00:00:00").getMonth()===now.getMonth()&&new Date(p.data+"T00:00:00").getFullYear()===now.getFullYear()).reduce((s,p)=>s+Number(p.valor||0),0);
+  const receitaAnual = payments.filter(p=>p.status==='pago'&&p.data&&new Date(p.data+"T00:00:00").getFullYear()===now.getFullYear()).reduce((s,p)=>s+Number(p.valor||0),0);
+  const concluidos = projects.filter(p=>p.status==='concluido').length;
+  const ticketMedio = concluidos ? receitaTotal/concluidos : 0;
+  const receitaAtualizacoes = updates.filter(u=>['concluida','aguardando_pagamento'].includes(u.status)).reduce((s,u)=>s+Number(u.valor||0),0);
+  const taxaConv = leads.length ? ((leads.filter(l=>l.etapa==='fechado').length/leads.length)*100).toFixed(1) : '0.0';
+
+  const rows = [
+    {l:'Faturamento mensal', v:BRL(receitaMensal)},
+    {l:'Faturamento anual', v:BRL(receitaAnual)},
+    {l:'Lucro (receita total)', v:BRL(receitaTotal)},
+    {l:'Número de clientes', v:clients.length},
+    {l:'Número de projetos', v:projects.length},
+    {l:'Ticket médio por projeto concluído', v:BRL(ticketMedio)},
+    {l:'Receita com atualizações', v:BRL(receitaAtualizacoes)},
+    {l:'Taxa de conversão de leads', v:taxaConv+'%'},
+  ];
+
+  return (
+    <div>
+      <div className="section-head"><div><div className="section-title">Relatórios</div><div className="section-sub">Indicadores consolidados da PixelCodeStudio</div></div></div>
+      <div className="grid grid-4">
+        {rows.map((r,i)=>(
+          <div className="card stat-card" key={i}>
+            <div className="stat-label">{r.l}</div>
+            <div className="stat-value">{r.v}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   CONFIGURAÇÕES
+   ============================================================ */
+function ConfiguracoesPage({theme, setTheme, user, onLogout}){
+  const [setupOpen, setSetupOpen] = useState(false);
+  return (
+    <div>
+      <div className="section-head"><div><div className="section-title">Configurações</div><div className="section-sub">Preferências do painel</div></div></div>
+      <div className="grid grid-2">
+        <div className="card">
+          <div className="card-title">Aparência</div>
+          <div className="card-sub">Escolha entre modo claro e escuro</div>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <div className={"switch "+(theme==='light'?"on":"")} onClick={()=>setTheme(theme==='dark'?'light':'dark')}><div className="knob"></div></div>
+            <span style={{fontSize:13}}>{theme==='dark' ? 'Modo escuro ativado' : 'Modo claro ativado'}</span>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-title">Conta do administrador</div>
+          <div className="card-sub">Sessão atual</div>
+          <div className="info-grid" style={{gridTemplateColumns:'1fr'}}>
+            <div><div className="lbl">E-mail</div>{user?.email || '—'}</div>
+          </div>
+          <button className="btn btn-danger" style={{marginTop:16}} onClick={onLogout}>{I('logout',{width:14,height:14})} Sair do painel</button>
+        </div>
+        <div className="card">
+          <div className="card-title">Banco de dados</div>
+          <div className="card-sub">Script SQL e instruções de configuração do Supabase</div>
+          <button className="btn btn-ghost" onClick={()=>setSetupOpen(true)}>{I('info',{width:14,height:14})} Ver script e instruções</button>
+        </div>
+      </div>
+      {setupOpen && <SetupModal onClose={()=>setSetupOpen(false)}/>}
+    </div>
+  );
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+function LoginScreen(){
+  const [email,setEmail] = useState('');
+  const [password,setPassword] = useState('');
+  const [error,setError] = useState('');
+  const [loading,setLoading] = useState(false);
+  const [setupOpen, setSetupOpen] = useState(!CONFIGURED);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError(''); setLoading(true);
+    const {error} = await supabase.auth.signInWithPassword({email, password});
+    setLoading(false);
+    if (error) setError(error.message === 'Invalid login credentials' ? 'E-mail ou senha inválidos.' : error.message);
+  };
+
+  return (
+    <div className="login-wrap">
+      <div className="login-glow"></div>
+      <form className="login-card" onSubmit={submit}>
+        <div className="login-logo">
+          <div className="logo-mark"><i/><i/><i/><i/><i/><i/><i/><i/><i/></div>
+          <div><div className="login-title">PixelCodeStudio</div><div className="brand-sub" style={{marginTop:1}}>Painel administrativo</div></div>
+        </div>
+        <div className="login-sub" style={{marginBottom:20}}>Acesso restrito ao administrador da agência.</div>
+        {!CONFIGURED && <div className="login-error" style={{color:'var(--amber)',background:'rgba(245,166,35,.1)',borderColor:'rgba(245,166,35,.3)'}}>Este arquivo ainda não está conectado a um projeto Supabase. Veja "Como configurar" abaixo.</div>}
+        {error && <div className="login-error">{error}</div>}
+        <div className="field">
+          <label>E-mail</label>
+          <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@pixelcodestudio.com"/>
+        </div>
+        <div className="field">
+          <label>Senha</label>
+          <input type="password" required value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••"/>
+        </div>
+        <button className="btn btn-primary btn-block" disabled={loading} type="submit">{loading?"Entrando...":"Entrar no painel"}</button>
+        <div className="login-demo">Não há cadastro público. O usuário administrador é criado no painel Authentication do Supabase.</div>
+        <button type="button" className="btn btn-ghost btn-block" style={{marginTop:10}} onClick={()=>setSetupOpen(true)}>
+          {I('info',{width:14,height:14})} Como configurar o Supabase
+        </button>
+      </form>
+      {setupOpen && <SetupModal onClose={()=>setSetupOpen(false)}/>}
+    </div>
+  );
+}
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+const NAV = [
+  {key:'dashboard', label:'Dashboard', icon:'dashboard'},
+  {key:'clientes', label:'Clientes', icon:'clients'},
+  {key:'projetos', label:'Projetos', icon:'projects'},
+  {key:'prospeccao', label:'Prospecção', icon:'prospect'},
+  {key:'orcamentos', label:'Orçamentos', icon:'quotes'},
+  {key:'financeiro', label:'Financeiro', icon:'finance'},
+  {key:'atualizacoes', label:'Atualizações', icon:'updates'},
+  {key:'servicos', label:'Serviços', icon:'services'},
+  {key:'portfolio', label:'Portfólio', icon:'portfolio'},
+  {key:'relatorios', label:'Relatórios', icon:'reports'},
+  {key:'configuracoes', label:'Configurações', icon:'settings'},
+];
+const PAGE_TITLES = Object.fromEntries(NAV.map(n=>[n.key,n.label]));
+
+function AppShell({user}){
+  const [page, setPage] = useState('dashboard');
+  const [openClientId, setOpenClientId] = useState(null);
+  const [theme, setTheme] = useState('dark');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(()=>{ document.documentElement.setAttribute('data-theme', theme); },[theme]);
+
+  const go = (key) => { setPage(key); setOpenClientId(null); setSidebarOpen(false); };
+  const logout = async () => { await supabase.auth.signOut(); };
+
+  let body;
+  if (page==='dashboard') body = <Dashboard theme={theme}/>;
+  else if (page==='clientes') body = openClientId ? <ClienteDetail clientId={openClientId} onBack={()=>setOpenClientId(null)}/> : <ClientesPage onOpenClient={c=>setOpenClientId(c.id)}/>;
+  else if (page==='projetos') body = <ProjetosPage/>;
+  else if (page==='prospeccao') body = <ProspeccaoPage/>;
+  else if (page==='orcamentos') body = <OrcamentosPage/>;
+  else if (page==='financeiro') body = <FinanceiroPage/>;
+  else if (page==='atualizacoes') body = <AtualizacoesPage/>;
+  else if (page==='servicos') body = <ServicosPage/>;
+  else if (page==='portfolio') body = <PortfolioPage/>;
+  else if (page==='relatorios') body = <RelatoriosPage/>;
+  else if (page==='configuracoes') body = <ConfiguracoesPage theme={theme} setTheme={setTheme} user={user} onLogout={logout}/>;
+
+  const initials = (user?.email||'A').slice(0,2).toUpperCase();
+
+  return (
+    <div className="app">
+      <div className={"sidebar-backdrop "+(sidebarOpen?"open":"")} onClick={()=>setSidebarOpen(false)}></div>
+      <aside className={"sidebar "+(sidebarOpen?"open":"")}>
+        <div className="sidebar-head">
+          <div className="logo-mark"><i/><i/><i/><i/><i/><i/><i/><i/><i/></div>
+          <div>
+            <div className="brand-name">PixelCodeStudio</div>
+            <div className="brand-sub">Painel interno</div>
+          </div>
+        </div>
+        <nav className="nav scrollbar">
+          {NAV.map(n=>(
+            <div key={n.key} className={"nav-item "+(page===n.key?"active":"")} onClick={()=>go(n.key)}>
+              {I(n.icon)}{n.label}
+            </div>
+          ))}
+        </nav>
+        <div className="sidebar-foot">
+          <div className="pulse-row"><span className="pulse-dot"></span>Conectado ao Supabase</div>
+        </div>
+      </aside>
+
+      <div className="main">
+        <header className="topbar">
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <button className="icon-btn menu-btn" onClick={()=>setSidebarOpen(true)}>{I('menu')}</button>
+            <div className="topbar-title">{openClientId ? 'Cliente' : PAGE_TITLES[page]}</div>
+          </div>
+          <div className="topbar-right">
+            <button className="icon-btn" onClick={()=>setTheme(theme==='dark'?'light':'dark')} title="Alternar tema">
+              {I(theme==='dark'?'sun':'moon')}
+            </button>
+            <div className="avatar" title={user?.email}>{initials}</div>
+          </div>
+        </header>
+        <div className="content">{body}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   ROOT
+   ============================================================ */
+function Root(){
+  const [session, setSession] = useState(undefined); // undefined = checking
+
+  useEffect(()=>{
+    supabase.auth.getSession().then(({data})=> setSession(data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+    return ()=> sub.subscription.unsubscribe();
+  },[]);
+
+  if (session === undefined){
+    return <div className="login-wrap"><div className="spinner"></div></div>;
+  }
+  return (
+    <ToastProvider>
+      {session ? <AppShell user={session.user}/> : <LoginScreen/>}
+    </ToastProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
+</script>
+</body>
+</html>
